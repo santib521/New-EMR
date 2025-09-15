@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterOptions = document.querySelectorAll('.filter-options');
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const clearFilterBtn = document.getElementById('clearFilterBtn');
-    
+
     // Show/Hide Modal
     filterBtn.addEventListener('click', () => {
         filterModal.style.display = 'flex';
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     menuItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            
+
             menuItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
 
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchDoctor = (selectedDoctors.length === 0 || selectedDoctors.includes(visit.doctor));
             const matchLocation = (selectedLocations.length === 0 || selectedLocations.includes(visit.location));
             const matchDiagnosis = (selectedDiagnoses.length === 0 || selectedDiagnoses.includes(visit.diagnosis));
-            
+
             return matchDoctor && matchLocation && matchDiagnosis;
         });
 
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
                 // Corrected selector to match your HTML file
-                const content = doc.querySelector('.main-content').innerHTML; 
+                const content = doc.querySelector('.container').innerHTML;
                 reportsDialogBody.innerHTML = content;
                 reportsDialog.style.display = 'flex';
             })
