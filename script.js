@@ -162,7 +162,8 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(html => {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
-                const content = doc.querySelector('.dashboard-container').innerHTML;
+                // Corrected selector to match your HTML file
+                const content = doc.querySelector('.main-content').innerHTML; 
                 reportsDialogBody.innerHTML = content;
                 reportsDialog.style.display = 'flex';
             })
