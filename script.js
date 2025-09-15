@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         farRightMenu.classList.toggle('expanded');
     });
 
-    // New: Reports Dialog Logic
+    // New: Reports Dialog Logic (using fetch() to load content)
     const reportsLink = document.getElementById('reportsLink');
     const reportsDialog = document.getElementById('reportsDialog');
     const closeReportsBtn = document.getElementById('closeReportsBtn');
@@ -153,7 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to load content from PT_Dashboard.html
     function loadReportsContent() {
         fetch('PT_Dashboard.html')
-            .then(response => response.text())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
             .then(html => {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
@@ -163,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Error loading reports:', error);
-                reportsDialogBody.innerHTML = '<p>Failed to load reports.</p>';
+                reportsDialogBody.innerHTML = '<p>Failed to load reports. Please check your files and try again.</p>';
                 reportsDialog.style.display = 'flex';
             });
     }
