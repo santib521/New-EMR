@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Summary - สรุปประวัติผู้ป่วย</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            color: #1a202c;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .patient-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .patient-basic {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .patient-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .patient-details {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .quick-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 100px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .summary-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: #4a5568;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-content {
+            padding: 20px;
+        }
+
+        .diagnosis-timeline {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .diagnosis-card {
+            background: #e2e8f0;
+            border: 2px solid transparent;
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .diagnosis-card:hover {
+            background: #cbd5e0;
+            border-color: #4299e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .diagnosis-card.active {
+            background: #ebf8ff;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .diagnosis-date {
+            font-size: 12px;
+            color: #718096;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .diagnosis-name {
+            font-weight: 600;
+            font-size: 16px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .diagnosis-icd {
+            font-size: 11px;
+            color: #4a5568;
+            background: #f7fafc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .detail-card {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #4299e1;
+        }
+
+        .detail-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2d3748;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-list {
+            list-style: none;
+        }
+
+        .detail-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .detail-list li:last-child {
+            border-bottom: none;
+        }
+
+        .medication-item {
+            background: #fff5f5;
+            border-left: 3px solid #f56565;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+
+        .medication-name {
+            font-weight: 600;
+            color: #c53030;
+        }
+
+        .medication-dose {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .lab-result {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .lab-value {
+            font-weight: 600;
+        }
+
+        .lab-normal {
+            color: #38a169;
+        }
+
+        .lab-abnormal {
+            color: #e53e3e;
+        }
+
+        .lab-reference {
+            font-size: 11px;
+            color: #718096;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .btn-refresh {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .btn-refresh:hover {
+            background: #3182ce;
+        }
+
+        @media (max-width: 768px) {
+            .quick-stats {
+                justify-content: center;
+            }
+            
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .diagnosis-timeline {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="patient-info">
+            <div class="patient-basic">
+                <div class="patient-name">นางสาวสมใจ ใจดี</div>
+                <div class="patient-details">
+                    HN: 12345678 | อายุ: 45 ปี | เพศ: หญิง | โทร: 089-123-4567
+                </div>
+            </div>
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">ครั้งที่มา</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">อาการหลัก</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">ยาประจำ</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="summary-section">
+            <div class="section-header">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                การวินิจฉัยหลัก - 6 เดือนที่ผ่านมา
+                <button class="btn-refresh" style="margin-left: auto; padding: 5px 15px; font-size: 12px;">
+                    รีเฟรช
+                </button>
+            </div>
+            <div class="section-content">
+                <div class="diagnosis-timeline">
+                    <div class="diagnosis-card active" onclick="showDetails('diabetes')">
+                        <div class="diagnosis-date">15 มี.ค. 2567</div>
+                        <div class="diagnosis-name">เบาหวานชนิดที่ 2</div>
+                        <div class="diagnosis-icd">ICD-10: E11.9</div>
+                    </div>
+                    <div class="diagnosis-card" onclick="showDetails('hypertension')">
+                        <div class="diagnosis-date">22 ก.พ. 2567</div>
+                        <div class="diagnosis-name">ความดันโลหิตสูง</div>
+                        <div class="diagnosis-icd">ICD-10: I10</div>
+                    </div>
+                    <div class="diagnosis-card" onclick="showDetails('dyslipidemia')">
+                        <div class="diagnosis-date">10 ม.ค. 2567</div>
+                        <div class="diagnosis-name">ไขมันในเลือดสูง</div>
+                        <div class="diagnosis-icd">ICD-10: E78.5</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="diabetes-details" class="summary-section">
+            <div class="section-header">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+                รายละเอียด: เบาหวานชนิดที่ 2 (วันที่ 15 มี.ค. 2567)
+            </div>
+            <div class="section-content">
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                            </svg>
+                            ผลการตรวจทางห้องปฏิบัติการ
+                        </div>
+                        <ul class="detail-list">
+                            <li>
+                                <span>FPG</span>
+                                <span class="lab-result">
+                                    <span class="lab-value lab-abnormal">145 mg/dL</span>
+                                    <span class="lab-reference">(70-100)</span>
+                                </span>
+                            </li>
+                            <li>
+                                <span>HbA1c</span>
+                                <span class="lab-result">
+                                    <span class="lab-value lab-abnormal">7.8%</span>
+                                    <span class="lab-reference">(<7.0%)</span>
+                                </span>
+                            </li>
+                            <li>
+                                <span>Creatinine</span>
+                                <span class="lab-result">
+                                    <span class="lab-value lab-normal">0.9 mg/dL</span>
+                                    <span class="lab-reference">(0.6-1.2)</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979.217.36.45.804.673 1.253.448.9.875 1.887.875 2.768 0 .79-.639 1.429-1.429 1.429H8.617c-.79 0-1.429-.639-1.429-1.429 0-.881.427-1.868.875-2.768.223-.449.456-.893.673-1.253z" clip-rule="evenodd"/>
+                            </svg>
+                            ยาที่สั่ง
+                        </div>
+                        <div>
+                            <div class="medication-item">
+                                <div class="medication-name">Metformin 500mg</div>
+                                <div class="medication-dose">วันละ 2 ครั้ง หลังอาหาร</div>
+                            </div>
+                            <div class="medication-item">
+                                <div class="medication-name">Glipizide 5mg</div>
+                                <div class="medication-dose">วันละ 1 ครั้ง ก่อนอาหารเช้า</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                            นัดหมายถัดไป
+                        </div>
+                        <ul class="detail-list">
+                            <li>
+                                <span>นัดตรวจต่อ</span>
+                                <span><strong>15 มิ.ย. 2567</strong></span>
+                            </li>
+                            <li>
+                                <span>ตรวจ Lab</span>
+                                <span><strong>1 มิ.ย. 2567</strong></span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            คำแนะนำ
+                        </div>
+                        <ul class="detail-list">
+                            <li>ควบคุมอาหาร หลีกเลี่ยงของหวาน</li>
+                            <li>ออกกำลังกายสม่ำเสมอ 30 นาที/วัน</li>
+                            <li>ตรวจน้ำตาลเลือดที่บ้านสัปดาห์ละ 2-3 ครั้ง</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="hypertension-details" class="summary-section hidden">
+            <div class="section-header">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+                รายละเอียด: ความดันโลหิตสูง (วันที่ 22 ก.พ. 2567)
+            </div>
+            <div class="section-content">
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                            </svg>
+                            ความดันโลหิต
+                        </div>
+                        <ul class="detail-list">
+                            <li>
+                                <span>ครั้งที่ 1</span>
+                                <span class="lab-value lab-abnormal">150/95 mmHg</span>
+                            </li>
+                            <li>
+                                <span>ครั้งที่ 2</span>
+                                <span class="lab-value lab-abnormal">148/92 mmHg</span>
+                            </li>
+                            <li>
+                                <span>เป้าหมาย</span>
+                                <span class="lab-reference">< 140/90 mmHg</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979.217.36.45.804.673 1.253.448.9.875 1.887.875 2.768 0 .79-.639 1.429-1.429 1.429H8.617c-.79 0-1.429-.639-1.429-1.429 0-.881.427-1.868.875-2.768.223-.449.456-.893.673-1.253z" clip-rule="evenodd"/>
+                            </svg>
+                            ยาที่สั่ง
+                        </div>
+                        <div>
+                            <div class="medication-item">
+                                <div class="medication-name">Amlodipine 5mg</div>
+                                <div class="medication-dose">วันละ 1 ครั้ง ตอนเช้า</div>
+                            </div>
+                            <div class="medication-item">
+                                <div class="medication-name">Losartan 50mg</div>
+                                <div class="medication-dose">วันละ 1 ครั้ง ตอนเช้า</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="dyslipidemia-details" class="summary-section hidden">
+            <div class="section-header">
+                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+                รายละเอียด: ไขมันในเลือดสูง (วันที่ 10 ม.ค. 2567)
+            </div>
+            <div class="section-content">
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                            </svg>
+                            ผลตรวจไขมัน
+                        </div>
+                        <ul class="detail-list">
+                            <li>
+                                <span>Total Cholesterol</span>
+                                <span class="lab-result">
+                                    <span class="lab-value lab-abnormal">280 mg/dL</span>
+                                    <span class="lab-reference">(<200)</span>
+                                </span>
+                            </li>
+                            <li>
+                                <span>LDL</span>
+                                <span class="lab-result">
+                                    <span class="lab-value lab-abnormal">180 mg/dL</span>
+                                    <span class="lab-reference">(<100)</span>
+                                </span>
+                            </li>
+                            <li>
+                                <span>HDL</span>
+                                <span class="lab-result">
+                                    <span class="lab-value lab-abnormal">35 mg/dL</span>
+                                    <span class="lab-reference">(>40)</span>
+                                </span>
+                            </li>
+                            <li>
+                                <span>Triglyceride</span>
+                                <span class="lab-result">
+                                    <span class="lab-value lab-abnormal">250 mg/dL</span>
+                                    <span class="lab-reference">(<150)</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="detail-card">
+                        <div class="detail-title">
+                            <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.736 6.979C9.208 6.193 9.696 6 10 6c.304 0 .792.193 1.264.979.217.36.45.804.673 1.253.448.9.875 1.887.875 2.768 0 .79-.639 1.429-1.429 1.429H8.617c-.79 0-1.429-.639-1.429-1.429 0-.881.427-1.868.875-2.768.223-.449.456-.893.673-1.253z" clip-rule="evenodd"/>
+                            </svg>
+                            ยาที่สั่ง
+                        </div>
+                        <div>
+                            <div class="medication-item">
+                                <div class="medication-name">Atorvastatin 20mg</div>
+                                <div class="medication-dose">วันละ 1 ครั้ง ตอนเย็นหลังอาหาร</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointments Modal -->
+    <div id="appointmentsModal" class="appointments-modal hidden">
+        <div class="appointments-content">
+            <div class="appointments-header">
+                <h3>นัดหมายในอนาคต</h3>
+                <button class="close-btn" onclick="toggleAppointments()">×</button>
+            </div>
+            <div class="appointments-grid">
+                <div class="appointment-item">
+                    <div class="appointment-date">
+                        <div class="appointment-day">15</div>
+                        <div class="appointment-month">มิ.ย.</div>
+                    </div>
+                    <div class="appointment-details">
+                        <h4>ตรวจติดตาม เบาหวาน</h4>
+                        <div class="appointment-time">09:00 - 09:30</div>
+                        <div class="appointment-dept">แผนก Internal Medicine</div>
+                    </div>
+                    <div class="appointment-status status-confirmed">ยืนยัน</div>
+                </div>
+
+                <div class="appointment-item">
+                    <div class="appointment-date">
+                        <div class="appointment-day">01</div>
+                        <div class="appointment-month">มิ.ย.</div>
+                    </div>
+                    <div class="appointment-details">
+                        <h4>ตรวจ Lab</h4>
+                        <div class="appointment-time">07:30 - 08:00</div>
+                        <div class="appointment-dept">ห้องปฏิบัติการ</div>
+                    </div>
+                    <div class="appointment-status status-confirmed">ยืนยัน</div>
+                </div>
+
+                <div class="appointment-item">
+                    <div class="appointment-date">
+                        <div class="appointment-day">22</div>
+                        <div class="appointment-month">มิ.ย.</div>
+                    </div>
+                    <div class="appointment-details">
+                        <h4>ตรวจ Cardiology</h4>
+                        <div class="appointment-time">14:00 - 14:30</div>
+                        <div class="appointment-dept">แผนกโรคหัวใจ</div>
+                    </div>
+                    <div class="appointment-status status-pending">รอยืนยัน</div>
+                </div>
+
+                <div class="appointment-item">
+                    <div class="appointment-date">
+                        <div class="appointment-day">05</div>
+                        <div class="appointment-month">ก.ค.</div>
+                    </div>
+                    <div class="appointment-details">
+                        <h4>ตรวจตา</h4>
+                        <div class="appointment-time">10:30 - 11:00</div>
+                        <div class="appointment-dept">แผนกจักษุ</div>
+                    </div>
+                    <div class="appointment-status status-rescheduled">เลื่อนนัด</div>
+                </div>
+
+                <div class="appointment-item">
+                    <div class="appointment-date">
+                        <div class="appointment-day">20</div>
+                        <div class="appointment-month">ก.ค.</div>
+                    </div>
+                    <div class="appointment-details">
+                        <h4>Physical Check-up</h4>
+                        <div class="appointment-time">08:00 - 09:00</div>
+                        <div class="appointment-dept">แผนกตรวจสุขภาพ</div>
+                    </div>
+                    <div class="appointment-status status-confirmed">ยืนยัน</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleAppointments() {
+            const modal = document.getElementById('appointmentsModal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('appointmentsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                toggleAppointments();
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('appointmentsModal');
+                if (!modal.classList.contains('hidden')) {
+                    toggleAppointments();
+                }
+            }
+        });
+        function showDetails(diagnosisType) {
+            // Hide all detail sections
+            const detailSections = document.querySelectorAll('[id$="-details"]');
+            detailSections.forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Remove active class from all cards
+            const cards = document.querySelectorAll('.diagnosis-card');
+            cards.forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // Show selected detail section
+            const selectedSection = document.getElementById(diagnosisType + '-details');
+            if (selectedSection) {
+                selectedSection.classList.remove('hidden');
+            }
+
+            // Add active class to clicked card
+            event.target.closest('.diagnosis-card').classList.add('active');
+
+            // Smooth scroll to details
+            selectedSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+
+        // Initialize with first diagnosis active
+        document.addEventListener('DOMContentLoaded', function() {
+            showDetails('diabetes');
+        });
+    </script>
+</body>
+</html>

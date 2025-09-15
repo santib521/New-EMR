@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMR Mockup</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="patient-profile">
+                <img src="https://img.icons8.com/color/48/000000/user-male-circle.png" alt="User Profile" class="profile-icon">
+                <div class="patient-info-group">
+                    <h1>MR. ADMIT TEST A</h1>
+                    <div class="patient-info">
+                        <span>(Male)</span>
+                        <span>01-25-00360</span>
+                        <span>DOB 01 Jan 2002 (22Y 8M 14D)</span>
+                        <span>Blood Group: N/A</span>
+                        <br>
+                        <span>093421543, 011111111, (+1)0000000</span>
+                    </div>
+                </div>
+            </div>
+            <div class="vital-signs">
+                <span>Vital Signs</span>
+                <div class="no-result">No result found in this section</div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="content-area">
+                <div class="visits-section">
+                    <div class="visits-header">
+                        <h2>Visits</h2>
+                        <div class="visit-nav-btn">
+                            <span class="left-arrow">&lt;</span>
+                            <span class="right-arrow">&gt;</span>
+                        </div>
+                    </div>
+                    <div class="visit-list" id="visitList">
+                        </div>
+                </div>
+
+                <div class="main-content-sections">
+                    <div class="content-section">
+                        <h2><img src="https://img.icons8.com/material-outlined/24/000000/notes.png" alt="Allergy Icon" class="section-icon"> NEW ALLERGY</h2>
+                        <div class="no-result">Not Applicable</div>
+                    </div>
+
+                    <div class="content-section">
+                        <h2><img src="https://img.icons8.com/material-outlined/24/000000/stethoscope.png" alt="CCPI Icon" class="section-icon"> CHIEF COMPLAINT & PRESENT ILLNESS</h2>
+                        <div class="no-result">Not Applicable</div>
+                    </div>
+
+                    <div class="content-section">
+                        <h2><img src="https://img.icons8.com/material-outlined/24/000000/pulse.png" alt="Physical Exam Icon" class="section-icon"> PHYSICAL EXAMINATION</h2>
+                        <div class="no-result">Not Applicable</div>
+                    </div>
+
+                    <div class="content-section">
+                        <h2><img src="https://img.icons8.com/material-outlined/24/000000/medical-history.png" alt="History Icon" class="section-icon"> PAST MEDICAL HISTORY</h2>
+                        <div class="no-result">Not Applicable</div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="sidebar right-sidebar">
+                <nav>
+                    <ul>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/notes.png" class="sidebar-icon"><span>CCPI</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/medical-history.png" class="sidebar-icon"><span>Physical Examination</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/hospital.png" class="sidebar-icon"><span>History</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/pills.png" class="sidebar-icon"><span>Diagnosis</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/syringe.png" class="sidebar-icon"><span>Medications</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/doctor.png" class="sidebar-icon"><span>Doctor Notes</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/document.png" class="sidebar-icon"><span>Healthcare Note</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/treatment-plan.png" class="sidebar-icon"><span>Treatment</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/test-tube.png" class="sidebar-icon"><span>Laboratory</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/search.png" class="sidebar-icon"><span>Radiology</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/edit-file.png" class="sidebar-icon"><span>Investigation</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/virus.png" class="sidebar-icon"><span>Pathology</span></a></li>
+                        <li><a href="#"><img src="https://img.icons8.com/material-outlined/24/000000/immunization.png" class="sidebar-icon"><span>Immunization</span></a></li>
+                    </ul>
+                </nav>
+            </aside>
+            
+            <aside class="far-right-menu" id="farRightMenu">
+                <button class="expand-btn" id="expandMenuBtn">
+                    <img src="https://img.icons8.com/material-outlined/24/FFFFFF/menu.png" alt="Menu">
+                </button>
+                <div class="menu-items">
+                    <a href="#"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/home.png" alt="Home"><span>Home</span></a>
+                    <a href="#"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/search.png" alt="Search"><span>Search</span></a>
+                    <a href="#"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/hospital-bed.png" alt="Ward"><span>Ward</span></a>
+                    <a href="#" id="reportsLink"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/document.png" alt="Reports"><span>Reports</span></a>
+                    <a href="#"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/shopping-cart.png" alt="Cart"><span>Cart</span></a>
+                    <a href="#"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/settings.png" alt="Settings"><span>Settings</span></a>
+                    <a href="#"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/sync.png" alt="Sync"><span>Sync</span></a>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="footer">
+            <button class="footer-btn"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/menu.png" class="footer-icon"><span>Menu</span></button>
+            <button class="footer-btn"><img src="https://img.icons8.com/material-outlined/24/FFFFFF/list.png" class="footer-icon"><span>Problem(s) List</span></button>
+            <button id="showFilterBtn" class="filter-btn">
+                <img id="filterIcon" src="https://img.icons8.com/material-outlined/24/FFFFFF/filter--v1.png" alt="Filter Icon">
+                <span>Filter</span>
+            </button>
+        </footer>
+    </div>
+
+    <div id="filterModal" class="filter-modal">
+        <div class="filter-modal-content">
+            <div class="filter-header">
+                <h3>Filter by</h3>
+                <button id="closeFilterBtn" class="close-btn">&times;</button>
+            </div>
+            
+            <div class="filter-body">
+                <div class="filter-menu">
+                    <a href="#" class="menu-item active" data-target="doctor-options">Doctor</a>
+                    <a href="#" class="menu-item" data-target="location-options">Location</a>
+                    <a href="#" class="menu-item" data-target="diagnosis-options">Diagnosis</a>
+                </div>
+                <div class="filter-options-container">
+                    <div id="doctor-options" class="filter-options active">
+                        <h4>Doctor</h4>
+                        <label class="checkbox-container">Dr. A
+                            <input type="checkbox" value="Dr. A">
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkbox-container">Dr. B
+                            <input type="checkbox" value="Dr. B">
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkbox-container">Dr. C
+                            <input type="checkbox" value="Dr. C">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+
+                    <div id="location-options" class="filter-options">
+                        <h4>Location</h4>
+                        <label class="checkbox-container">Surgery Dept
+                            <input type="checkbox" value="Surgery Dept">
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkbox-container">Health Department
+                            <input type="checkbox" value="Health Department">
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkbox-container">Check-up Clinic
+                            <input type="checkbox" value="Check-up Clinic">
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkbox-container">ER
+                            <input type="checkbox" value="ER">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+
+                    <div id="diagnosis-options" class="filter-options">
+                        <h4>Diagnosis</h4>
+                        <label class="checkbox-container">Diagnosis X
+                            <input type="checkbox" value="Diagnosis X">
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkbox-container">Diagnosis Y
+                            <input type="checkbox" value="Diagnosis Y">
+                            <span class="checkmark"></span>
+                        </label>
+                        <label class="checkbox-container">Diagnosis Z
+                            <input type="checkbox" value="Diagnosis Z">
+                            <span class="checkmark"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-footer">
+                <button id="clearFilterBtn" class="clear-btn">Clear Filter</button>
+                <button id="applyFilterBtn" class="apply-btn">Apply Filter</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="reportsDialog" class="reports-dialog-overlay">
+        <div class="reports-dialog-content">
+            <div class="reports-dialog-header">
+                <h3>Patient Reports</h3>
+                <button id="closeReportsBtn" class="close-btn">&times;</button>
+            </div>
+            <div class="reports-dialog-body" id="reportsDialogBody">
+                </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

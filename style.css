@@ -1,0 +1,531 @@
+/* General Body & Container Styles */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f5f6f8;
+    margin: 0;
+    padding: 0;
+    color: #444;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* --- Header Section --- */
+header {
+    background-color: #ffffff;
+    padding: 10px 20px;
+    border-bottom: 1px solid #e1e4e8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.patient-profile {
+    display: flex;
+    align-items: center;
+}
+
+.profile-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 15px;
+}
+
+.patient-info-group h1 {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin: 0 0 5px 0;
+}
+
+.patient-info {
+    font-size: 0.8em;
+    color: #777;
+    line-height: 1.4;
+}
+
+.patient-info span {
+    margin-right: 15px;
+}
+
+.vital-signs {
+    text-align: right;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.no-result {
+    font-style: italic;
+    color: #999;
+    margin-top: 5px;
+}
+
+/* --- Main Content & Sidebars --- */
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.content-area {
+    flex: 1;
+    padding: 20px;
+    background-color: #ffffff;
+    overflow-y: auto;
+}
+
+/* Right Sidebar */
+.right-sidebar {
+    width: 250px;
+    background-color: #f7f9fc;
+    padding: 15px 0;
+    border-left: 1px solid #e1e4e8;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.right-sidebar nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.right-sidebar nav ul li a {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: #555;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.right-sidebar nav ul li a:hover {
+    background-color: #e1e4e8;
+}
+
+.sidebar-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    filter: grayscale(100%);
+}
+
+/* --- Far-right Menu --- */
+.far-right-menu {
+    background-color: #405781;
+    color: #fff;
+    width: 60px;
+    transition: width 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+    z-index: 100;
+}
+
+.far-right-menu.expanded {
+    width: 150px;
+}
+
+.far-right-menu .expand-btn {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.far-right-menu .menu-items {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: flex-start;
+    padding-top: 10px;
+}
+
+.far-right-menu .menu-items a {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.far-right-menu.expanded .menu-items a span {
+    opacity: 1;
+    visibility: visible;
+    margin-left: 10px;
+}
+
+.far-right-menu .menu-items a span {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.far-right-menu .menu-items a img {
+    filter: invert(100%);
+    width: 20px;
+    height: 20px;
+}
+
+/* --- Other sections remain the same --- */
+.visits-section {
+    background-color: #ffffff;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+.visits-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e1e4e8;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.visit-list {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 10px 0;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.visit-list::-webkit-scrollbar {
+    display: none;
+}
+
+.visit-card {
+    min-width: 200px;
+    background-color: #f5f8ff;
+    border: 1px solid #a8c1ff;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 0.9em;
+    color: #333;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.visit-card.active {
+    background-color: #dbe4ff;
+    border: 2px solid #2e62ff;
+}
+
+.visit-card p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.visit-card-title {
+    font-weight: 600;
+}
+
+.main-content-sections {
+    background-color: #ffffff;
+    padding: 0 20px;
+}
+
+.content-section {
+    border: 1px solid #e1e4e8;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+
+.content-section h2 {
+    font-size: 1.1em;
+    color: #333;
+    border-bottom: 1px solid #e1e4e8;
+    padding-bottom: 10px;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+}
+
+.section-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.footer {
+    background-color: #405781;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.footer-btn {
+    background-color: transparent;
+    border: none;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s;
+}
+
+.footer-icon {
+    filter: invert(100%);
+    width: 20px;
+    height: 20px;
+}
+
+.filter-btn {
+    background-color: #405781;
+    border: none;
+    color: #fff;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.3s;
+}
+
+.filter-btn.active {
+    background-color: #e74c3c;
+}
+
+/* --- Filter Modal --- */
+.filter-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.filter-modal-content {
+    background-color: #fff;
+    border-radius: 8px;
+    width: 600px;
+    max-width: 90%;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e4e8;
+    background-color: #f7f9fc;
+}
+
+.filter-body {
+    display: flex;
+    min-height: 300px;
+}
+
+.filter-menu {
+    flex: 1;
+    background-color: #f7f9fc;
+    border-right: 1px solid #e1e4e8;
+    padding: 10px 0;
+}
+
+.menu-item {
+    display: block;
+    padding: 12px 15px;
+    color: #555;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.menu-item.active {
+    background-color: #fff;
+    border-left: 3px solid #2e62ff;
+    color: #2e62ff;
+    font-weight: bold;
+}
+
+.filter-options-container {
+    flex: 2;
+    padding: 15px 20px;
+}
+
+.filter-options {
+    display: none;
+}
+
+.filter-options.active {
+    display: block;
+}
+
+.checkbox-container {
+    display: block;
+    position: relative;
+    padding-left: 25px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    font-size: 1em;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.checkbox-container input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 18px;
+    width: 18px;
+    background-color: #eee;
+    border-radius: 50%;
+    border: 1px solid #ccc;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+    background-color: #ddd;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: #2e62ff;
+    border: 1px solid #2e62ff;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-container .checkmark:after {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+}
+
+.filter-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #e1e4e8;
+    display: flex;
+    justify-content: space-between;
+}
+
+.apply-btn {
+    padding: 10px 20px;
+    background-color: #2e62ff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.clear-btn {
+    padding: 10px 20px;
+    background-color: #f4f4f4;
+    color: #555;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* New: Reports Dialog Styles */
+.reports-dialog-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+}
+
+.reports-dialog-content {
+    background-color: #fff;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 900px;
+    height: 80%;
+    max-height: 800px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.reports-dialog-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e1e4e8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f7f9fc;
+}
+
+.reports-dialog-header h3 {
+    margin: 0;
+    color: #405781;
+}
+
+.reports-dialog-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 2em;
+    cursor: pointer;
+    color: #888;
+}
+
+/* Adjustments for PT_Dashboard content inside dialog */
+.reports-dialog-body .header-pt {
+    border-bottom: none;
+    margin-bottom: 0;
+    display: none; /* Hide the header from the embedded content */
+}
