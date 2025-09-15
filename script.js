@@ -144,44 +144,11 @@ document.addEventListener('DOMContentLoaded', () => {
         farRightMenu.classList.toggle('expanded');
     });
 
-    // New: Reports Dialog Logic (using fetch() to load content)
+    // New: Remove the dialog logic and redirect to PT_Dashboard.html instead
     const reportsLink = document.getElementById('reportsLink');
-    const reportsDialog = document.getElementById('reportsDialog');
-    const closeReportsBtn = document.getElementById('closeReportsBtn');
-    const reportsDialogBody = document.getElementById('reportsDialogBody');
-
-    // Function to load content from PT_Dashboard.html
-    function loadReportsContent() {
-        fetch('PT_Dashboard.html')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                // Corrected selector to match your HTML file
-                const content = doc.querySelector('.container').innerHTML;
-                reportsDialogBody.innerHTML = content;
-                reportsDialog.style.display = 'flex';
-            })
-            .catch(error => {
-                console.error('Error loading reports:', error);
-                reportsDialogBody.innerHTML = '<p>Failed to load reports. Please check your files and try again.</p>';
-                reportsDialog.style.display = 'flex';
-            });
-    }
-
-    // Event listener for the Reports link
     reportsLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loadReportsContent();
-    });
-
-    // Event listener to close the dialog
-    closeReportsBtn.addEventListener('click', () => {
-        reportsDialog.style.display = 'none';
+        // e.preventDefault();
+        // window.location.href is a much simpler way to redirect
+        window.location.href = 'PT_Dashboard.html';
     });
 });
