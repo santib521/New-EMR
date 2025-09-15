@@ -4,412 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patient Summary - สรุปประวัติผู้ป่วย</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f8fafc;
-            color: #1a202c;
-            line-height: 1.4;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 20px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        .patient-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .patient-basic {
-            flex: 1;
-            min-width: 250px;
-        }
-
-        .patient-name {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 3px;
-        }
-
-        .patient-details {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        .quick-stats {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 12px;
-            border-radius: 6px;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        .stat-value {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .stat-label {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-
-        .container {
-            max-width: 100%;
-            height: calc(100vh - 120px);
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .summary-section {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.08);
-            margin-bottom: 12px;
-            overflow: hidden;
-        }
-
-        .section-header {
-            background: #4a5568;
-            color: white;
-            padding: 8px 15px;
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .section-content {
-            padding: 12px;
-        }
-
-        .diagnosis-timeline {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 0;
-        }
-
-        .diagnosis-card {
-            background: #e2e8f0;
-            border: 2px solid transparent;
-            border-radius: 8px;
-            padding: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 180px;
-            flex: 1;
-        }
-
-        .diagnosis-card:hover {
-            background: #cbd5e0;
-            border-color: #4299e1;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-
-        .diagnosis-card.active {
-            background: #ebf8ff;
-            border-color: #3182ce;
-            box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.1);
-        }
-
-        .diagnosis-date {
-            font-size: 11px;
-            color: #718096;
-            font-weight: 500;
-            margin-bottom: 3px;
-        }
-
-        .diagnosis-name {
-            font-weight: 600;
-            font-size: 14px;
-            color: #2d3748;
-            margin-bottom: 5px;
-        }
-
-        .diagnosis-icd {
-            font-size: 10px;
-            color: #4a5568;
-            background: #f7fafc;
-            padding: 2px 6px;
-            border-radius: 3px;
-            display: inline-block;
-        }
-
-        .visit-count {
-            background: #e53e3e;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            margin-left: 5px;
-            font-weight: bold;
-        }
-
-        .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        .detail-card {
-            background: #f7fafc;
-            border-radius: 6px;
-            padding: 10px;
-            border-left: 3px solid #4299e1;
-        }
-
-        .detail-title {
-            font-weight: 600;
-            font-size: 13px;
-            color: #2d3748;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .detail-list {
-            list-style: none;
-        }
-
-        .detail-list li {
-            padding: 3px 0;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-        }
-
-        .detail-list li:last-child {
-            border-bottom: none;
-        }
-
-        .medication-item {
-            background: #fff5f5;
-            border-left: 3px solid #f56565;
-            padding: 8px;
-            margin: 4px 0;
-            border-radius: 4px;
-        }
-
-        .medication-name {
-            font-weight: 600;
-            color: #c53030;
-            font-size: 12px;
-        }
-
-        .medication-dose {
-            font-size: 11px;
-            color: #718096;
-        }
-
-        .lab-result {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .lab-value {
-            font-weight: 600;
-        }
-
-        .lab-normal {
-            color: #38a169;
-        }
-
-        .lab-abnormal {
-            color: #e53e3e;
-        }
-
-        .lab-reference {
-            font-size: 10px;
-            color: #718096;
-        }
-
-        .icon {
-            width: 16px;
-            height: 16px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .btn-refresh {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 11px;
-            transition: background 0.3s ease;
-        }
-
-        .btn-refresh:hover {
-            background: #3182ce;
-        }
-
-        .cc-pi-text {
-            font-size: 12px;
-            color: #4a5568;
-            line-height: 1.4;
-            background: #f7fafc;
-            padding: 8px;
-            border-radius: 4px;
-            border-left: 3px solid #4299e1;
-        }
-
-        .pe-findings {
-            font-size: 12px;
-            color: #2d3748;
-        }
-
-        .pe-item {
-            padding: 5px 0;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .pe-item:last-child {
-            border-bottom: none;
-        }
-
-        .pe-system {
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 2px;
-        }
-
-        .pe-finding {
-            color: #4a5568;
-            font-size: 11px;
-        }
-
-        .xray-item {
-            background: #f0fff4;
-            border-left: 3px solid #38a169;
-            padding: 8px;
-            margin: 4px 0;
-            border-radius: 4px;
-        }
-
-        .xray-type {
-            font-weight: 600;
-            color: #2f855a;
-            margin-bottom: 3px;
-            font-size: 12px;
-        }
-
-        .xray-finding {
-            font-size: 11px;
-            color: #4a5568;
-            margin-bottom: 2px;
-        }
-
-        .xray-impression {
-            font-size: 11px;
-            color: #2f855a;
-            font-style: italic;
-        }
-
-        .treatment-item {
-            background: #f0f9ff;
-            border-left: 3px solid #0ea5e9;
-            padding: 8px;
-            margin: 4px 0;
-            border-radius: 4px;
-        }
-
-        .treatment-category {
-            font-weight: 600;
-            color: #0369a1;
-            margin-bottom: 3px;
-            font-size: 12px;
-        }
-
-        .treatment-detail {
-            font-size: 11px;
-            color: #475569;
-        }
-
-        .visit-tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
-
-        .visit-tab {
-            background: #e2e8f0;
-            border: 1px solid #cbd5e0;
-            padding: 5px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.3s ease;
-        }
-
-        .visit-tab.active {
-            background: #3182ce;
-            color: white;
-            border-color: #2c5aa0;
-        }
-
-        .visit-tab:hover {
-            background: #cbd5e0;
-        }
-
-        .visit-tab.active:hover {
-            background: #2c5aa0;
-        }
-
-        @media (max-width: 1200px) {
-            .detail-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .detail-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .diagnosis-timeline {
-                flex-direction: column;
-            }
-            
-            .container {
-                padding: 10px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="PT_Dashboard.css">
 </head>
 <body>
     <div class="header">
@@ -429,276 +24,494 @@
                     <div class="stat-value">3</div>
                     <div class="stat-label">อาการหลัก</div>
                 </div>
-                <div class="stat-item">
+                <div class="stat-item" onclick="toggleMedicationModal()">
                     <div class="stat-value">5</div>
                     <div class="stat-label">ยาประจำ</div>
+                </div>
+                <div class="stat-item" onclick="toggleAppointmentsModal()">
+                    <div class="stat-value">3</div>
+                    <div class="stat-label">นัดหมาย</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="container">
-        <div class="summary-section">
-            <div class="section-header">
-                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                การวินิจฉัยหลัก - 6 เดือนที่ผ่านมา
-                <button class="btn-refresh" style="margin-left: auto;">
-                    รีเฟรช
-                </button>
-            </div>
-            <div class="section-content">
-                <div class="diagnosis-timeline">
-                    <div class="diagnosis-card active" onclick="showDetails('diabetes')">
-                        <div class="diagnosis-date">15 มี.ค. 2567</div>
-                        <div class="diagnosis-name">เบาหวานชนิดที่ 2 <span class="visit-count">(2)</span></div>
-                        <div class="diagnosis-icd">ICD-10: E11.9</div>
-                    </div>
-                    <div class="diagnosis-card" onclick="showDetails('hypertension')">
-                        <div class="diagnosis-date">22 ก.พ. 2567</div>
-                        <div class="diagnosis-name">ความดันโลหิตสูง <span class="visit-count">(4)</span></div>
-                        <div class="diagnosis-icd">ICD-10: I10</div>
-                    </div>
-                    <div class="diagnosis-card" onclick="showDetails('dyslipidemia')">
-                        <div class="diagnosis-date">10 ม.ค. 2567</div>
-                        <div class="diagnosis-name">ไขมันในเลือดสูง <span class="visit-count">(3)</span></div>
-                        <div class="diagnosis-icd">ICD-10: E78.5</div>
-                    </div>
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="summary-section">
+                <div class="section-header">
+                    <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    การวินิจฉัยหลัก - 6 เดือนที่ผ่านมา
                 </div>
-            </div>
-        </div>
-
-        <div id="diabetes-details" class="summary-section">
-            <div class="section-header">
-                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
-                </svg>
-                รายละเอียด: เบาหวานชนิดที่ 2 (มา 2 ครั้ง)
-            </div>
-            <div class="section-content">
-                <div class="visit-tabs">
-                    <div class="visit-tab active" onclick="showVisit('diabetes', 1)">ครั้งที่ 1 (15 มี.ค. 67)</div>
-                    <div class="visit-tab" onclick="showVisit('diabetes', 2)">ครั้งที่ 2 (10 เม.ย. 67)</div>
-                </div>
-                
-                <div id="diabetes-visit-1" class="visit-content">
-                    <div class="detail-grid">
-                        <div class="detail-card">
-                            <div class="detail-title">
-                                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"/>
-                                </svg>
-                                CC/PI (ครั้งที่ 1)
-                            </div>
-                            <div class="cc-pi-text">
-                                <strong>CC:</strong> มาตรวจติดตามเบาหวาน ตรวจน้ำตาลเลือดที่บ้าน 130-160 mg/dL<br><br>
-                                <strong>PI:</strong> ผู้ป่วยหญิงอายุ 45 ปี เป็นเบาหวานมา 3 ปี ควบคุมด้วยยา Metformin และ Glipizide 
-                                อาการเหนื่อยง่าย หิวน้ำบ่อย ตรวจน้ำตาลเลือดที่บ้านช่วง 2 สัปดาห์ที่ผ่านมาอยู่ในระดับ 130-160 mg/dL
-                            </div>
+                <div class="section-content">
+                    <div class="diagnosis-timeline vertical-timeline">
+                        <div class="diagnosis-card" onclick="showDetails('diabetes', this)">
+                            <div class="diagnosis-date">15 มี.ค. 2567</div>
+                            <div class="diagnosis-name">เบาหวานชนิดที่ 2 <span class="visit-count">(2)</span></div>
+                            <div class="diagnosis-icd">ICD-10: E11.9</div>
                         </div>
-
-                        <div class="detail-card">
-                            <div class="detail-title">
-                                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9 9a2 2 0 114 0 2 2 0 01-4 0z"/>
-                                </svg>
-                                PE (ครั้งที่ 1)
-                            </div>
-                            <div class="pe-findings">
-                                <div class="pe-item">
-                                    <div class="pe-system">Vital Signs:</div>
-                                    <div class="pe-finding">BP 130/85, HR 78, Temp 36.5°C, RR 18/min</div>
-                                </div>
-                                <div class="pe-item">
-                                    <div class="pe-system">General:</div>
-                                    <div class="pe-finding">Alert, cooperative, no acute distress</div>
-                                </div>
-                            </div>
+                        <div class="diagnosis-card" onclick="showDetails('hypertension', this)">
+                            <div class="diagnosis-date">22 ก.พ. 2567</div>
+                            <div class="diagnosis-name">ความดันโลหิตสูง <span class="visit-count">(4)</span></div>
+                            <div class="diagnosis-icd">ICD-10: I10</div>
                         </div>
-
-                        <div class="detail-card">
-                            <div class="detail-title">
-                                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4z"/>
-                                </svg>
-                                Lab (ครั้งที่ 1)
-                            </div>
-                            <ul class="detail-list">
-                                <li>
-                                    <span>FPG</span>
-                                    <span class="lab-result">
-                                        <span class="lab-value lab-abnormal">145 mg/dL</span>
-                                        <span class="lab-reference">(70-100)</span>
-                                    </span>
-                                </li>
-                                <li>
-                                    <span>HbA1c</span>
-                                    <span class="lab-result">
-                                        <span class="lab-value lab-abnormal">7.8%</span>
-                                        <span class="lab-reference">(<7.0%)</span>
-                                    </span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-title">
-                                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4z"/>
-                                </svg>
-                                X-Ray (ครั้งที่ 1)
-                            </div>
-                            <div>
-                                <div class="xray-item">
-                                    <div class="xray-type">Chest X-Ray</div>
-                                    <div class="xray-finding">- Heart size normal</div>
-                                    <div class="xray-impression">Impression: Normal chest X-ray</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-title">
-                                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16z" clip-rule="evenodd"/>
-                                </svg>
-                                ยาที่สั่ง (ครั้งที่ 1)
-                            </div>
-                            <div>
-                                <div class="medication-item">
-                                    <div class="medication-name">Metformin 500mg</div>
-                                    <div class="medication-dose">วันละ 2 ครั้ง หลังอาหาร</div>
-                                </div>
-                                <div class="medication-item">
-                                    <div class="medication-name">Glipizide 5mg</div>
-                                    <div class="medication-dose">วันละ 1 ครั้ง ก่อนอาหารเช้า</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="detail-card">
-                            <div class="detail-title">
-                                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                                </svg>
-                                Treatment Plan (ครั้งที่ 1)
-                            </div>
-                            <div>
-                                <div class="treatment-item">
-                                    <div class="treatment-category">Pharmacotherapy</div>
-                                    <div class="treatment-detail">Continue current medications</div>
-                                </div>
-                                <div class="treatment-item">
-                                    <div class="treatment-category">Monitoring</div>
-                                    <div class="treatment-detail">Home glucose monitoring 3x/week</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="diabetes-visit-2" class="visit-content hidden">
-                    <div class="detail-grid">
-                        <div class="detail-card">
-                            <div class="detail-title">CC/PI (ครั้งที่ 2)</div>
-                            <div class="cc-pi-text">
-                                <strong>CC:</strong> มาตรวจติดตาม น้ำตาลเลือดยังควบคุมไม่ได้<br><br>
-                                <strong>PI:</strong> มานัดตามแพทย์ น้ำตาลเลือดที่บ้านยังสูง 150-180 mg/dL แม้ทานยาสม่ำเสมอ
-                            </div>
-                        </div>
-                        <div class="detail-card">
-                            <div class="detail-title">Lab (ครั้งที่ 2)</div>
-                            <ul class="detail-list">
-                                <li><span>FPG</span><span class="lab-abnormal">165 mg/dL</span></li>
-                                <li><span>HbA1c</span><span class="lab-abnormal">8.2%</span></li>
-                            </ul>
-                        </div>
-                        <div class="detail-card">
-                            <div class="detail-title">ยาที่สั่ง (ครั้งที่ 2)</div>
-                            <div>
-                                <div class="medication-item">
-                                    <div class="medication-name">Metformin 1000mg</div>
-                                    <div class="medication-dose">เพิ่มขนาดเป็น 1000mg</div>
-                                </div>
-                                <div class="medication-item">
-                                    <div class="medication-name">Insulin Glargine</div>
-                                    <div class="medication-dose">เพิ่มใหม่ 10 units ก่อนนอน</div>
-                                </div>
-                            </div>
+                        <div class="diagnosis-card" onclick="showDetails('dyslipidemia', this)">
+                            <div class="diagnosis-date">10 ม.ค. 2567</div>
+                            <div class="diagnosis-name">ไขมันในเลือดสูง <span class="visit-count">(3)</span></div>
+                            <div class="diagnosis-icd">ICD-10: E78.5</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div id="dyslipidemia-details" class="summary-section hidden">
-            <div class="section-header">
-                <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                </svg>
-                รายละเอียด: ไขมันในเลือดสูง (มา 3 ครั้ง)
+    
+        <div class="right-panel">
+            <div id="timeline-details" class="summary-section active-details">
+                <div class="section-header">
+                    <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M4 4a2 2 0 01-2 2v10a2 2 0 012 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4z"/>
+                    </svg>
+                    ครั้งที่มาพบแพทย์
+                </div>
+                <div class="section-content">
+                    <div class="visit-list">
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                10 เม.ย. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจติดตามเบาหวาน</h4>
+                                <div class="visit-summary">ค่า HbA1c: 8.2% / ปรับยาเพิ่ม Insulin</div>
+                            </div>
+                        </div>
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                10 เม.ย. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจติดตามความดันโลหิตสูง</h4>
+                                <div class="visit-summary">ค่า BP: 132/88 mmHg / ควบคุมได้ดี</div>
+                            </div>
+                        </div>
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                10 มี.ค. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจติดตามไขมันในเลือด</h4>
+                                <div class="visit-summary">ค่า LDL: 98 mg/dL / ค่ากลับสู่ปกติ</div>
+                            </div>
+                        </div>
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                05 มี.ค. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจเบาหวาน</h4>
+                                <div class="visit-summary">ค่า HbA1c: 7.8% / เริ่มยา Metformin</div>
+                            </div>
+                        </div>
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                05 มี.ค. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจติดตามความดันโลหิตสูง</h4>
+                                <div class="visit-summary">ค่า BP: 148/92 mmHg / เพิ่มยา Losartan</div>
+                            </div>
+                        </div>
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                22 ก.พ. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจความดันโลหิตสูง</h4>
+                                <div class="visit-summary">ค่า BP: 150/95 mmHg / เริ่มยา Amlodipine</div>
+                            </div>
+                        </div>
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                05 ก.พ. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจติดตามไขมันในเลือด</h4>
+                                <div class="visit-summary">ค่า LDL: 150 mg/dL / เพิ่มยา Atorvastatin</div>
+                            </div>
+                        </div>
+                        <div class="visit-item">
+                            <div class="visit-date-circle">
+                                <svg class="circle-icon" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 18a8 8 0 100-16 8 8 0 000 16z"/>
+                                </svg>
+                                10 ม.ค. 2567
+                            </div>
+                            <div class="visit-info">
+                                <h4>ตรวจสุขภาพประจำปี</h4>
+                                <div class="visit-summary">วินิจฉัย: ไขมันในเลือดสูง / เริ่มยา Atorvastatin</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="section-content">
-                <div class="visit-tabs">
-                    <div class="visit-tab active" onclick="showVisit('dyslipidemia', 1)">ครั้งที่ 1 (10 ม.ค. 67)</div>
-                    <div class="visit-tab" onclick="showVisit('dyslipidemia', 2)">ครั้งที่ 2 (15 ก.พ. 67)</div>
-                    <div class="visit-tab" onclick="showVisit('dyslipidemia', 3)">ครั้งที่ 3 (20 มี.ค. 67)</div>
+
+            <div id="details-panel" class="details-panel hidden">
+                <div class="go-back" onclick="showAppointments()">
+                    <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                    </svg>
+                    ย้อนกลับ
                 </div>
                 
-                <div id="dyslipidemia-visit-1" class="visit-content">
-                    <div class="detail-grid">
-                        <div class="detail-card">
-                            <div class="detail-title">CC/PI (ครั้งที่ 1)</div>
-                            <div class="cc-pi-text">
-                                <strong>CC:</strong> มาตรวจสุขภาพประจำปี<br><br>
-                                <strong>PI:</strong> ไม่มีอาการเฉพาะ มาตรวจสุขภาพประจำปี มีประวัติครอบครัวเป็นโรคหัวใจ
+                <div id="diabetes-details" class="summary-section hidden">
+                    <div class="section-header">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                        </svg>
+                        รายละเอียด: <span id="details-title">เบาหวานชนิดที่ 2</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="visit-timeline-details">
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">10 เม.ย. 2567</div>
                             </div>
-                        </div>
-                        <div class="detail-card">
-                            <div class="detail-title">Lab (ครั้งที่ 1)</div>
-                            <ul class="detail-list">
-                                <li><span>Total Chol</span><span class="lab-abnormal">280 mg/dL</span></li>
-                                <li><span>LDL</span><span class="lab-abnormal">180 mg/dL</span></li>
-                                <li><span>HDL</span><span class="lab-abnormal">35 mg/dL</span></li>
-                            </ul>
-                        </div>
-                        <div class="detail-card">
-                            <div class="detail-title">ยาที่สั่ง (ครั้งที่ 1)</div>
-                            <div class="medication-item">
-                                <div class="medication-name">Atorvastatin 20mg</div>
-                                <div class="medication-dose">วันละ 1 ครั้ง ตอนเย็น</div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตาม น้ำตาลเลือดยังควบคุมไม่ได้<br><br><strong>PI:</strong> มานัดตามแพทย์ น้ำตาลเลือดที่บ้านยังสูง 150-180 mg/dL แม้ทานยาสม่ำเสมอ</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 128/80 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <ul class="detail-list">
+                                        <li><span>FPG</span><span class="lab-abnormal">165 mg/dL</span></li>
+                                        <li><span>HbA1c</span><span class="lab-abnormal">8.2%</span></li>
+                                    </ul>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">ไม่ได้มีการส่งตรวจ X-ray เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Metformin 1000mg</div><div class="medication-dose">เพิ่มขนาดเป็น 1000mg</div></div>
+                                    <div class="medication-item"><div class="medication-name">Insulin Glargine</div><div class="medication-dose">เพิ่มใหม่ 10 units ก่อนนอน</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">ปรับเพิ่มยา Metformin และเพิ่ม Insulin Glargine เพื่อควบคุมระดับน้ำตาล นัดติดตามผลอีกครั้งใน 1 เดือน</div>
+                                </div>
+                            </div>
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">15 มี.ค. 2567</div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตามเบาหวาน ตรวจน้ำตาลเลือดที่บ้าน 130-160 mg/dL<br><br><strong>PI:</strong> ผู้ป่วยหญิงอายุ 45 ปี เป็นเบาหวานมา 3 ปี ควบคุมด้วยยา Metformin และ Glipizide อาการเหนื่อยง่าย หิวน้ำบ่อย ตรวจน้ำตาลเลือดที่บ้านช่วง 2 สัปดาห์ที่ผ่านมาอยู่ในระดับ 130-160 mg/dL</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 130/85 mmHg, HR 75 bpm, RR 18/min, BT 36.8 C. HEENT: not remarkable. Chest: Clear breath sounds. Abdomen: Soft, non-tender. Extremities: No edema.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <ul class="detail-list">
+                                        <li><span>FPG</span><span class="lab-result"><span class="lab-value lab-abnormal">145 mg/dL</span><span class="lab-reference">(70-100)</span></span></li>
+                                        <li><span>HbA1c</span><span class="lab-result"><span class="lab-value lab-abnormal">7.8%</span><span class="lab-reference">(<7.0%)</span></span></li>
+                                    </ul>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">Chest X-ray: No active disease.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Metformin 500mg</div><div class="medication-dose">วันละ 3 ครั้ง หลังอาหารเช้า, กลางวัน, เย็น</div></div>
+                                    <div class="medication-item"><div class="medication-name">Glipizide 5mg</div><div class="medication-dose">วันละ 1 ครั้ง ก่อนอาหารเช้า</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">ควบคุมระดับน้ำตาลด้วยยาเดิม แนะนำการออกกำลังกายและควบคุมอาหาร นัดติดตามผลอีกครั้งใน 1 เดือน</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="dyslipidemia-visit-2" class="visit-content hidden">
-                    <div class="detail-grid">
-                        <div class="detail-card">
-                            <div class="detail-title">CC/PI (ครั้งที่ 2)</div>
-                            <div class="cc-pi-text">
-                                <strong>CC:</strong> มาตรวจติดตามไขมัน<br><br>
-                                <strong>PI:</strong> ทานยาสม่ำเสมอ ลดอาหารมันแล้ว
+                <div id="hypertension-details" class="summary-section hidden">
+                    <div class="section-header">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6.5 10a1 1 0 11-2 0 1 1 0 012 0zM10 14a1 1 0 100-2 1 1 0 000 2zM14 10a1 1 0 11-2 0 1 1 0 012 0z"/>
+                        </svg>
+                        รายละเอียด: <span id="details-title">ความดันโลหิตสูง</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="visit-timeline-details">
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">10 เม.ย. 2567</div>
                             </div>
-                        </div>
-                        <div class="detail-card">
-                            <div class="detail-title">Lab (ครั้งที่ 2)</div>
-                            <ul class="detail-list">
-                                <li><span>Total Chol</span><span class="lab-abnormal">240 mg/dL</span></li>
-                                <li><span>LDL</span><span class="lab-abnormal">150 mg/dL</span></li>
-                                <li><span>HDL</span><span class="lab-normal">42 mg/dL</span></li>
-                            </ul>
-                        </div>
-                        <div class="detail-card">
-                            <div class="detail-title">ยาที่สั่ง (ครั้งที่ 2)</div>
-                            <div class="medication-item">
-                                <div class="medication-name">Atorvastatin 40mg</div>
-                                <div class="medication-dose">เพิ่มขนาดเป็น 40mg</div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> ตรวจติดตามความดันโลหิต<br><br><strong>PI:</strong> ความดันโลหิตที่บ้านอยู่ระหว่าง 125-135/75-85 mmHg ไม่มีอาการปวดศีรษะหรือเวียนศีรษะ</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 132/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <div class="cc-pi-text">ไม่มีการส่งตรวจ Lab เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">ไม่ได้มีการส่งตรวจ X-ray เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Amlodipine 5mg</div><div class="medication-dose">วันละ 1 ครั้ง ก่อนนอน</div></div>
+                                    <div class="medication-item"><div class="medication-name">Losartan 50mg</div><div class="medication-dose">วันละ 1 ครั้ง หลังอาหารเช้า</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">ควบคุมความดันโลหิตได้ดีด้วยยาเดิม นัดติดตามผลอีกครั้งใน 3 เดือน</div>
+                                </div>
+                            </div>
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">05 มี.ค. 2567</div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> ตรวจติดตามความดันโลหิต<br><br><strong>PI:</strong> ความดันโลหิตที่บ้าน 140-150/90-95 mmHg ยังมีอาการปวดศีรษะตอนเช้า</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 148/92 mmHg, HR 80 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <div class="cc-pi-text">ไม่มีการส่งตรวจ Lab เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">ไม่ได้มีการส่งตรวจ X-ray เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Amlodipine 5mg</div><div class="medication-dose">วันละ 1 ครั้ง ก่อนนอน</div></div>
+                                    <div class="medication-item"><div class="medication-name">Losartan 50mg</div><div class="medication-dose">เพิ่มยาใหม่ วันละ 1 ครั้ง หลังอาหารเช้า</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">เพิ่มยา Losartan เพื่อช่วยควบคุมความดันโลหิตที่ยังไม่ถึงเป้าหมาย นัดติดตามผลใน 1 เดือน</div>
+                                </div>
+                            </div>
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">22 ก.พ. 2567</div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาพบแพทย์เพื่อตรวจสุขภาพ<br><br><strong>PI:</strong> มีอาการปวดศีรษะช่วงเช้าเป็นพัก ๆ วัดความดันโลหิตที่บ้านได้ 150/95 mmHg</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 150/95 mmHg, HR 85 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <div class="cc-pi-text">ไม่มีการส่งตรวจ Lab เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">ไม่ได้มีการส่งตรวจ X-ray เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Amlodipine 5mg</div><div class="medication-dose">เริ่มยาใหม่ วันละ 1 ครั้ง ก่อนนอน</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">วินิจฉัยความดันโลหิตสูง เริ่มยา Amlodipine 5mg นัดติดตามผลใน 1 เดือน</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="dyslipidemia
+                <div id="dyslipidemia-details" class="summary-section hidden">
+                    <div class="section-header">
+                        <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM6.5 10a1 1 0 11-2 0 1 1 0 012 0zM10 14a1 1 0 100-2 1 1 0 000 2zM14 10a1 1 0 11-2 0 1 1 0 012 0z"/>
+                        </svg>
+                        รายละเอียด: <span id="details-title">ไขมันในเลือดสูง</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="visit-timeline-details">
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">10 มี.ค. 2567</div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตามไขมัน<br><br><strong>PI:</strong> ทานยา Atorvastatin สม่ำเสมอและควบคุมอาหารไขมัน</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 130/85 mmHg, HR 75 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <ul class="detail-list">
+                                        <li><span>Total Chol</span><span class="lab-normal">180 mg/dL</span></li>
+                                        <li><span>LDL</span><span class="lab-normal">98 mg/dL</span></li>
+                                        <li><span>HDL</span><span class="lab-normal">45 mg/dL</span></li>
+                                    </ul>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">ไม่ได้มีการส่งตรวจ X-ray เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Atorvastatin 40mg</div><div class="medication-dose">ทานยาเดิมต่อไป</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">ระดับไขมันกลับสู่ปกติ ให้ทานยาเดิมต่อไป นัดติดตามผลใน 6 เดือน</div>
+                                </div>
+                            </div>
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">05 ก.พ. 2567</div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตามไขมัน<br><br><strong>PI:</strong> ทานยา Atorvastatin 20mg สม่ำเสมอ แต่ยังชอบทานอาหารมัน</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 140/90 mmHg, HR 80 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <ul class="detail-list">
+                                        <li><span>Total Chol</span><span class="lab-abnormal">260 mg/dL</span></li>
+                                        <li><span>LDL</span><span class="lab-abnormal">150 mg/dL</span></li>
+                                        <li><span>HDL</span><span class="lab-abnormal">42 mg/dL</span></li>
+                                    </ul>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">ไม่ได้มีการส่งตรวจ X-ray เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Atorvastatin 40mg</div><div class="medication-dose">เพิ่มขนาดเป็น 40mg วันละ 1 ครั้ง</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">ระดับไขมันยังสูง ปรับเพิ่มยา Atorvastatin เป็น 40mg และแนะนำให้ควบคุมอาหาร นัดติดตามผลใน 1 เดือน</div>
+                                </div>
+                            </div>
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">10 ม.ค. 2567</div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> ตรวจสุขภาพประจำปี<br><br><strong>PI:</strong> ไม่มีอาการผิดปกติ แต่ผลเลือดบ่งชี้ว่ามีไขมันสูง</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 135/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <ul class="detail-list">
+                                        <li><span>Total Chol</span><span class="lab-abnormal">250 mg/dL</span></li>
+                                        <li><span>LDL</span><span class="lab-abnormal">180 mg/dL</span></li>
+                                        <li><span>HDL</span><span class="lab-abnormal">35 mg/dL</span></li>
+                                    </ul>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">Chest X-ray: No active disease.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="medication-item"><div class="medication-name">Atorvastatin 20mg</div><div class="medication-dose">วันละ 1 ครั้ง ตอนเย็น</div></div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">วินิจฉัย: ไขมันในเลือดสูง เริ่มยา Atorvastatin 20mg แนะนำปรับเปลี่ยนพฤติกรรมการกินและออกกำลังกาย นัดติดตามผลใน 1 เดือน</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="medicationModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">รายการยาประจำ</h4>
+                <button class="modal-close" onclick="toggleMedicationModal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div class="modal-body" id="medication-list-container">
+            </div>
+        </div>
+    </div>
+    
+    <div id="appointmentsModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">นัดหมาย</h4>
+                <button class="modal-close" onclick="toggleAppointmentsModal()"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div class="modal-body" id="appointments-list-container">
+            </div>
+        </div>
+    </div>
+    
+    <script src="PT_Dashboard.js"></script>
+</body>
+</html>

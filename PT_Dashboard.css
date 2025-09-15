@@ -1,0 +1,472 @@
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8fafc;
+    color: #1a202c;
+    line-height: 1.4;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Header */
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.patient-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.patient-basic {
+    flex: 1;
+    min-width: 250px;
+}
+
+.patient-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.patient-details {
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.quick-stats {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    background: rgba(255,255,255,0.2);
+    padding: 8px 12px;
+    border-radius: 6px;
+    text-align: center;
+    min-width: 80px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.stat-label {
+    font-size: 11px;
+    opacity: 0.8;
+}
+
+/* Main Layout using Grid */
+.main-container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    height: calc(100vh - 84px);
+    padding: 15px;
+    gap: 15px;
+}
+
+.left-panel {
+    overflow-y: auto;
+}
+
+.right-panel {
+    overflow-y: auto;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 15px;
+}
+
+/* Common Section Styles */
+.summary-section {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.section-header {
+    background: #4a5568;
+    color: white;
+    padding: 8px 15px;
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-content {
+    padding: 12px;
+}
+
+/* Diagnosis Card Styles (Vertical) */
+.vertical-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.diagnosis-card {
+    background: #e2e8f0;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+.diagnosis-card:hover {
+    background: #cbd5e0;
+    border-color: #4299e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.diagnosis-card.active {
+    background: #ebf8ff;
+    border-color: #3182ce;
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.1);
+}
+
+.diagnosis-date {
+    font-size: 11px;
+    color: #718096;
+    font-weight: 500;
+    margin-bottom: 3px;
+}
+
+.diagnosis-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #2d3748;
+    margin-bottom: 5px;
+}
+
+.diagnosis-icd {
+    font-size: 10px;
+    color: #4a5568;
+    background: #f7fafc;
+    padding: 2px 6px;
+    border-radius: 3px;
+    display: inline-block;
+}
+
+.visit-count {
+    background: #e53e3e;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 5px;
+    font-weight: bold;
+}
+
+/* Visit Timeline on the right */
+.visit-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.visit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px;
+    background: #f7fafc;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.visit-date-circle {
+    font-size: 12px;
+    color: #4a5568;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.circle-icon {
+    width: 12px;
+    height: 12px;
+    color: #3182ce;
+}
+
+.visit-info {
+    flex: 1;
+}
+
+.visit-info h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: #2d3748;
+}
+
+.visit-summary {
+    font-size: 12px;
+    color: #4a5568;
+}
+
+/* Detail Section Styles */
+.details-panel {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 15px;
+}
+
+.go-back {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4a5568;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 0;
+    transition: color 0.2s ease;
+}
+
+.go-back:hover {
+    color: #2b6cb0;
+}
+
+.go-back .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.detail-card {
+    background: #e6f7ff;
+    border-left: 4px solid #3182ce;
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.detail-title {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 14px;
+    border-bottom: 1px solid #cbd5e0;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+}
+
+.cc-pi-text {
+    font-size: 12px;
+    color: #4a5568;
+}
+
+.detail-list {
+    list-style: none;
+}
+
+.detail-list li {
+    padding: 4px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.medication-item {
+    background: #fff5f5;
+    border-left: 3px solid #f56565;
+    padding: 8px;
+    margin: 4px 0;
+    border-radius: 4px;
+}
+
+.medication-name {
+    font-weight: 600;
+    color: #c53030;
+    font-size: 12px;
+}
+
+.medication-dose {
+    font-size: 11px;
+    color: #718096;
+}
+
+.lab-result {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.lab-value {
+    font-weight: 600;
+}
+
+.lab-normal {
+    color: #38a169;
+}
+
+.lab-abnormal {
+    color: #e53e3e;
+}
+
+.lab-reference {
+    font-size: 10px;
+    color: #718096;
+}
+
+.icon {
+    width: 16px;
+    height: 16px;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ---------------------------------------------------- */
+/* ส่วนของโค้ด CSS สำหรับ Modal ที่เพิ่มเข้ามาใหม่ */
+/* ---------------------------------------------------- */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2d3748;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #a0a0a0;
+}
+
+.modal-close:hover {
+    color: #4a5568;
+}
+
+.modal-body {
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+/* Medication List inside modal */
+.medication-card-modal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background: #f7fafc;
+    border-radius: 6px;
+    border-left: 4px solid #3182ce;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.medication-info-modal {
+    display: flex;
+    flex-direction: column;
+}
+
+.medication-name-modal {
+    font-weight: bold;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.medication-context-modal {
+    font-size: 12px;
+    color: #718096;
+    margin-top: 3px;
+}
+
+.medication-date-modal {
+    font-size: 12px;
+    color: #718096;
+}
+
+/* Appointment List inside modal */
+.appointment-card-modal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin-bottom: 8px;
+    background: #e6f7ff;
+    border-radius: 6px;
+    border-left: 4px solid #2b6cb0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.appointment-info-modal {
+    display: flex;
+    flex-direction: column;
+}
+
+.appointment-name-modal {
+    font-weight: bold;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.appointment-context-modal {
+    font-size: 12px;
+    color: #718096;
+    margin-top: 3px;
+}
+
+.appointment-date-modal {
+    font-size: 12px;
+    color: #718096;
+}
