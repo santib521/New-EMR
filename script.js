@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterOptions = document.querySelectorAll('.filter-options');
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const clearFilterBtn = document.getElementById('clearFilterBtn');
-    
+
     // Show/Hide Modal
     filterBtn.addEventListener('click', () => {
         filterModal.style.display = 'flex';
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     menuItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            
+
             menuItems.forEach(i => i.classList.remove('active'));
             item.classList.add('active');
 
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchDoctor = (selectedDoctors.length === 0 || selectedDoctors.includes(visit.doctor));
             const matchLocation = (selectedLocations.length === 0 || selectedLocations.includes(visit.location));
             const matchDiagnosis = (selectedDiagnoses.length === 0 || selectedDiagnoses.includes(visit.diagnosis));
-            
+
             return matchDoctor && matchLocation && matchDiagnosis;
         });
 
@@ -144,43 +144,11 @@ document.addEventListener('DOMContentLoaded', () => {
         farRightMenu.classList.toggle('expanded');
     });
 
-    // New: Reports Dialog Logic (using fetch() to load content)
+    // New: Remove the dialog logic and redirect to PT_Dashboard.html instead
     const reportsLink = document.getElementById('reportsLink');
-    const reportsDialog = document.getElementById('reportsDialog');
-    const closeReportsBtn = document.getElementById('closeReportsBtn');
-    const reportsDialogBody = document.getElementById('reportsDialogBody');
-
-    // Function to load content from PT_Dashboard.html
-    function loadReportsContent() {
-        fetch('PT_Dashboard.html')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const content = doc.querySelector('.dashboard-container').innerHTML;
-                reportsDialogBody.innerHTML = content;
-                reportsDialog.style.display = 'flex';
-            })
-            .catch(error => {
-                console.error('Error loading reports:', error);
-                reportsDialogBody.innerHTML = '<p>Failed to load reports. Please check your files and try again.</p>';
-                reportsDialog.style.display = 'flex';
-            });
-    }
-
-    // Event listener for the Reports link
     reportsLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        loadReportsContent();
-    });
-
-    // Event listener to close the dialog
-    closeReportsBtn.addEventListener('click', () => {
-        reportsDialog.style.display = 'none';
+        // e.preventDefault();
+        // window.location.href is a much simpler way to redirect
+        window.location.href = 'PT_Dashboard.html';
     });
 });
