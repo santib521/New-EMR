@@ -58,6 +58,7 @@ body {
     border-radius: 6px;
     text-align: center;
     min-width: 80px;
+    cursor: pointer; /* เพิ่ม cursor เพื่อบอกว่าเป็น clickable */
 }
 
 .stat-value {
@@ -252,6 +253,78 @@ body {
     height: 14px;
 }
 
+/* --- New Styles for Toggle and By-Date Mode --- */
+
+#mode-switch-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 5px;
+    background-color: #e2e8f0;
+    border-radius: 20px;
+}
+
+.mode-btn {
+    border: none;
+    background: transparent;
+    padding: 8px 15px;
+    border-radius: 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover {
+    background-color: #cbd5e0;
+}
+
+.mode-btn.active {
+    background-color: #3182ce;
+    color: white;
+}
+
+.visit-date-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.date-button {
+    background-color: #e6f7ff;
+    border: 1px solid #cceeff;
+    border-radius: 4px; /* ปรับขนาดให้เล็กลง */
+    padding: 5px 10px;  /* ลด padding ให้พอดีคำ */
+    font-size: 12px;     /* ปรับขนาดตัวอักษรให้เล็กลง */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    /* flex: 1; */ /* ลบ flex: 1 เพื่อให้ขนาดพอดีกับเนื้อหา */
+    min-width: unset; /* ลบ min-width */
+    text-align: center;
+}
+
+.date-button:hover {
+    background-color: #cceeff;
+}
+
+.date-button.active {
+    background-color: #3182ce;
+    color: white;
+    border-color: #3182ce;
+}
+
+/* Ensure only one card container is visible at a time in by-date mode */
+.visit-details-card-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+
+/* General detail grid styling */
 .detail-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

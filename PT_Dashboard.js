@@ -18,30 +18,21 @@ const allAppointments = [
 // ฟังก์ชันสำหรับเปิด/ปิดกล่องโต้ตอบรายการยา
 function toggleMedicationModal() {
     const modal = document.getElementById('medicationModal');
-    const medicationContainer = document.getElementById('medication-list-container');
+    const container = document.getElementById('medication-list-container');
     
-    // ตรวจสอบสถานะการแสดงผล
     if (modal.classList.contains('hidden')) {
-        // ถ้าซ่อนอยู่ ให้แสดงกล่องโต้ตอบ
-        modal.classList.remove('hidden');
-
-        // สร้าง HTML สำหรับรายการยาแต่ละรายการ
-        medicationContainer.innerHTML = ''; // ล้างรายการเดิม
-        allMedications.forEach(med => {
-            const medicationHtml = `
-                <div class="medication-card-modal">
-                    <div class="medication-info-modal">
-                        <div class="medication-name-modal">${med.name}</div>
-                        <div class="medication-context-modal">สำหรับ: ${med.diagnosis}</div>
-                    </div>
-                    <div class="medication-date-modal">ได้รับเมื่อ: ${med.date}</div>
+        // แสดงรายการยา
+        container.innerHTML = allMedications.map(med => `
+            <div class="medication-card-modal">
+                <div class="medication-info-modal">
+                    <span class="medication-name-modal">${med.name}</span>
+                    <span class="medication-context-modal">วินิจฉัย: ${med.diagnosis}</span>
                 </div>
-            `;
-            medicationContainer.innerHTML += medicationHtml;
-        });
-
+                <div class="medication-date-modal">${med.date}</div>
+            </div>
+        `).join('');
+        modal.classList.remove('hidden');
     } else {
-        // ถ้าแสดงอยู่ ให้ซ่อนกล่องโต้ตอบ
         modal.classList.add('hidden');
     }
 }
@@ -49,35 +40,33 @@ function toggleMedicationModal() {
 // ฟังก์ชันสำหรับเปิด/ปิดกล่องโต้ตอบการนัดหมาย
 function toggleAppointmentsModal() {
     const modal = document.getElementById('appointmentsModal');
-    const appointmentsContainer = document.getElementById('appointments-list-container');
+    const container = document.getElementById('appointments-list-container');
     
     if (modal.classList.contains('hidden')) {
-        modal.classList.remove('hidden');
-
-        appointmentsContainer.innerHTML = ''; 
-        allAppointments.forEach(appt => {
-            const appointmentHtml = `
-                <div class="appointment-card-modal">
-                    <div class="appointment-info-modal">
-                        <div class="appointment-name-modal">${appt.name}</div>
-                        <div class="appointment-context-modal">สถานที่: ${appt.location}</div>
-                    </div>
-                    <div class="appointment-date-modal">วันที่: ${appt.date}</div>
+        // แสดงรายการนัดหมาย
+        container.innerHTML = allAppointments.map(appt => `
+            <div class="appointment-card-modal">
+                <div class="appointment-info-modal">
+                    <span class="appointment-name-modal">${appt.name}</span>
+                    <span class="appointment-context-modal">สถานที่: ${appt.location}</span>
                 </div>
-            `;
-            appointmentsContainer.innerHTML += appointmentHtml;
-        });
+                <div class="appointment-date-modal">${appt.date}</div>
+            </div>
+        `).join('');
+        modal.classList.remove('hidden');
     } else {
         modal.classList.add('hidden');
     }
 }
 
+// ฟังก์ชันสำหรับแสดงรายละเอียดการวินิจฉัยที่เลือก
 function showDetails(diagnosisType, clickedCard) {
-    // ซ่อนรายการ 'ครั้งที่มาพบแพทย์'
-    document.getElementById('timeline-details').classList.add('hidden');
-    
-    // แสดง panel รายละเอียด
+    const timelinePanel = document.getElementById('timeline-details');
     const detailsPanel = document.getElementById('details-panel');
+    const titleSpan = document.querySelector('#' + diagnosisType + '-details .section-header span');
+
+    // ซ่อน timeline panel และแสดง details panel
+    timelinePanel.classList.add('hidden');
     detailsPanel.classList.remove('hidden');
 
     // ซ่อนทุกส่วนรายละเอียดการวินิจฉัย
@@ -109,6 +98,77 @@ function showDetails(diagnosisType, clickedCard) {
     if (clickedCard) {
         clickedCard.classList.add('active');
     }
+    
+    // เก็บประเภทการวินิจฉัยที่ใช้งานอยู่ไว้ใน dataset ของ details panel
+    detailsPanel.dataset.activeDiagnosis = diagnosisType;
+
+    // ตั้งค่าโหมดการแสดงผลเริ่มต้นเป็น 'แสดงทั้งหมด' ทุกครั้งที่มีการเลือกการ์ดใหม่
+    toggleDisplayMode('all');
+}
+
+// ฟังก์ชันสำหรับสลับโหมดการแสดงผล
+function toggleDisplayMode(mode) {
+    const detailsPanel = document.getElementById('details-panel');
+    const activeDiagnosis = detailsPanel.dataset.activeDiagnosis;
+    
+    if (!activeDiagnosis) return; // ออกจากฟังก์ชันถ้าไม่มีการเลือกการวินิจฉัย
+
+    const datesList = document.querySelector('#' + activeDiagnosis + '-dates-list');
+    const allVisits = document.querySelectorAll('#' + activeDiagnosis + '-details .visit-details-card-container');
+    
+    const allModeBtn = document.getElementById('all-mode-btn');
+    const byDateModeBtn = document.getElementById('by-date-mode-btn');
+    const latestVisits = {
+        'diabetes': 'diabetes-visit-2',
+        'hypertension': 'hypertension-visit-4',
+        'dyslipidemia': 'dyslipidemia-visit-3'
+    };
+
+    if (mode === 'byDate') {
+        datesList.classList.remove('hidden');
+        allVisits.forEach(visit => visit.classList.add('hidden'));
+        byDateModeBtn.classList.add('active');
+        allModeBtn.classList.remove('active');
+        
+        // แสดงข้อมูลวันที่ล่าสุดโดยอัตโนมัติ
+        if (latestVisits[activeDiagnosis]) {
+            showSingleVisit(activeDiagnosis, latestVisits[activeDiagnosis]);
+        }
+
+    } else { // mode === 'all'
+        datesList.classList.add('hidden');
+        allVisits.forEach(visit => visit.classList.remove('hidden'));
+        allModeBtn.classList.add('active');
+        byDateModeBtn.classList.remove('active');
+    }
+}
+
+// ฟังก์ชันสำหรับแสดงรายละเอียดของ visit เดียว
+function showSingleVisit(diagnosisType, visitId) {
+    const allVisits = document.querySelectorAll('#' + diagnosisType + '-details .visit-details-card-container');
+    const dateButtons = document.querySelectorAll('#' + diagnosisType + '-dates-list .date-button');
+
+    // ซ่อน visit ทั้งหมด
+    allVisits.forEach(visit => {
+        visit.classList.add('hidden');
+    });
+
+    // แสดงเฉพาะ visit ที่เลือก
+    const selectedVisit = document.getElementById(visitId);
+    if (selectedVisit) {
+        selectedVisit.classList.remove('hidden');
+    }
+
+    // ลบคลาส active จากปุ่มวันที่ทั้งหมด
+    dateButtons.forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // เพิ่มคลาส active ให้กับปุ่มที่ถูกคลิก
+    const clickedButton = document.querySelector(`[onclick="showSingleVisit('${diagnosisType}', '${visitId}')"]`);
+    if (clickedButton) {
+        clickedButton.classList.add('active');
+    }
 }
 
 function showAppointments() {
@@ -118,7 +178,7 @@ function showAppointments() {
     // ซ่อน panel รายละเอียด
     document.getElementById('details-panel').classList.add('hidden');
 
-    // ลบคลาส 'active' จากการ์ดการวินิจฉัยหลักทั้งหมด
+    // ลบคลาส 'active' จากการ์ดการวินิจฉัยทั้งหมด
     const cards = document.querySelectorAll('.diagnosis-card');
     cards.forEach(card => {
         card.classList.remove('active');

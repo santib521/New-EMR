@@ -184,6 +184,11 @@
                     </svg>
                     ย้อนกลับ
                 </div>
+
+                <div id="mode-switch-container">
+                    <button id="all-mode-btn" class="mode-btn active" onclick="toggleDisplayMode('all')">แสดงทั้งหมด</button>
+                    <button id="by-date-mode-btn" class="mode-btn" onclick="toggleDisplayMode('byDate')">เลือกวันที่</button>
+                </div>
                 
                 <div id="diabetes-details" class="summary-section hidden">
                     <div class="section-header">
@@ -194,7 +199,11 @@
                         รายละเอียด: <span id="details-title">เบาหวานชนิดที่ 2</span>
                     </div>
                     <div class="section-content">
-                        <div class="visit-timeline-details">
+                        <div id="diabetes-dates-list" class="visit-date-list hidden">
+                            <button class="date-button" onclick="showSingleVisit('diabetes', 'diabetes-visit-2')">10 เม.ย. 2567</button>
+                            <button class="date-button" onclick="showSingleVisit('diabetes', 'diabetes-visit-1')">15 มี.ค. 2567</button>
+                        </div>
+                        <div id="diabetes-visit-2" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">10 เม.ย. 2567</div>
@@ -229,6 +238,8 @@
                                     <div class="cc-pi-text">ปรับเพิ่มยา Metformin และเพิ่ม Insulin Glargine เพื่อควบคุมระดับน้ำตาล นัดติดตามผลอีกครั้งใน 1 เดือน</div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="diabetes-visit-1" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">15 มี.ค. 2567</div>
@@ -275,7 +286,13 @@
                         รายละเอียด: <span id="details-title">ความดันโลหิตสูง</span>
                     </div>
                     <div class="section-content">
-                        <div class="visit-timeline-details">
+                        <div id="hypertension-dates-list" class="visit-date-list hidden">
+                            <button class="date-button" onclick="showSingleVisit('hypertension', 'hypertension-visit-4')">10 เม.ย. 2567</button>
+                            <button class="date-button" onclick="showSingleVisit('hypertension', 'hypertension-visit-3')">05 มี.ค. 2567</button>
+                            <button class="date-button" onclick="showSingleVisit('hypertension', 'hypertension-visit-2')">22 ก.พ. 2567</button>
+                            <button class="date-button" onclick="showSingleVisit('hypertension', 'hypertension-visit-1')">10 ม.ค. 2567</button>
+                        </div>
+                        <div id="hypertension-visit-4" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">10 เม.ย. 2567</div>
@@ -307,6 +324,8 @@
                                     <div class="cc-pi-text">ควบคุมความดันโลหิตได้ดีด้วยยาเดิม นัดติดตามผลอีกครั้งใน 3 เดือน</div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="hypertension-visit-3" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">05 มี.ค. 2567</div>
@@ -338,6 +357,8 @@
                                     <div class="cc-pi-text">เพิ่มยา Losartan เพื่อช่วยควบคุมความดันโลหิตที่ยังไม่ถึงเป้าหมาย นัดติดตามผลใน 1 เดือน</div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="hypertension-visit-2" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">22 ก.พ. 2567</div>
@@ -369,6 +390,38 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="hypertension-visit-1" class="visit-details-card-container">
+                            <div class="timeline-point-container">
+                                <div class="timeline-point"></div>
+                                <div class="timeline-date">10 ม.ค. 2567</div>
+                            </div>
+                            <div class="detail-grid">
+                                <div class="detail-card">
+                                    <div class="detail-title">CC/PI</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจสุขภาพประจำปี<br><br><strong>PI:</strong> ผลการตรวจร่างกายพบความดันโลหิตสูงเล็กน้อย</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">PE</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 135/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Lab</div>
+                                    <div class="cc-pi-text">ไม่มีการส่งตรวจ Lab เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">X-ray</div>
+                                    <div class="cc-pi-text">ไม่ได้มีการส่งตรวจ X-ray เพิ่มเติม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">ยาที่สั่ง</div>
+                                    <div class="cc-pi-text">ยังไม่มีการสั่งยา</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Treatment Plan</div>
+                                    <div class="cc-pi-text">แนะนำให้ควบคุมอาหารเค็มและออกกำลังกายเพื่อลดความดันโลหิต นัดติดตามผลใน 1 เดือน</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -380,7 +433,12 @@
                         รายละเอียด: <span id="details-title">ไขมันในเลือดสูง</span>
                     </div>
                     <div class="section-content">
-                        <div class="visit-timeline-details">
+                        <div id="dyslipidemia-dates-list" class="visit-date-list hidden">
+                            <button class="date-button" onclick="showSingleVisit('dyslipidemia', 'dyslipidemia-visit-3')">10 มี.ค. 2567</button>
+                            <button class="date-button" onclick="showSingleVisit('dyslipidemia', 'dyslipidemia-visit-2')">05 ก.พ. 2567</button>
+                            <button class="date-button" onclick="showSingleVisit('dyslipidemia', 'dyslipidemia-visit-1')">10 ม.ค. 2567</button>
+                        </div>
+                        <div id="dyslipidemia-visit-3" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">10 มี.ค. 2567</div>
@@ -415,6 +473,8 @@
                                     <div class="cc-pi-text">ระดับไขมันกลับสู่ปกติ ให้ทานยาเดิมต่อไป นัดติดตามผลใน 6 เดือน</div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="dyslipidemia-visit-2" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">05 ก.พ. 2567</div>
@@ -449,6 +509,8 @@
                                     <div class="cc-pi-text">ระดับไขมันยังสูง ปรับเพิ่มยา Atorvastatin เป็น 40mg และแนะนำให้ควบคุมอาหาร นัดติดตามผลใน 1 เดือน</div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="dyslipidemia-visit-1" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
                                 <div class="timeline-date">10 ม.ค. 2567</div>
