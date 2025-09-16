@@ -203,6 +203,7 @@
                             <button class="date-button" onclick="showSingleVisit('diabetes', 'diabetes-visit-2')">10 เม.ย. 2567</button>
                             <button class="date-button" onclick="showSingleVisit('diabetes', 'diabetes-visit-1')">15 มี.ค. 2567</button>
                         </div>
+
                         <div id="diabetes-visit-2" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -237,8 +238,19 @@
                                     <div class="detail-title">Treatment Plan</div>
                                     <div class="cc-pi-text">ปรับเพิ่มยา Metformin และเพิ่ม Insulin Glargine เพื่อควบคุมระดับน้ำตาล นัดติดตามผลอีกครั้งใน 1 เดือน</div>
                                 </div>
+
+                                <!-- เพิ่มการ์ดใหม่ 2 ใบ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">แนะนำลดอาหารหวาน มัน เค็ม / แนะนำการออกกำลังกายสม่ำเสมออย่างน้อย 150 นาทีต่อสัปดาห์ / นัดติดตามน้ำหนักและระดับน้ำตาลใน 1 เดือน</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">ติดตามการให้ยาและตรวจ vital signs ทุก 4 ชั่วโมง / ให้คำแนะนำการใช้ยาและสังเกตอาการข้างเคียง / บันทึกการให้ยาใน MAR</div>
+                                </div>
                             </div>
                         </div>
+
                         <div id="diabetes-visit-1" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -247,17 +259,17 @@
                             <div class="detail-grid">
                                 <div class="detail-card">
                                     <div class="detail-title">CC/PI</div>
-                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตามเบาหวาน ตรวจน้ำตาลเลือดที่บ้าน 130-160 mg/dL<br><br><strong>PI:</strong> ผู้ป่วยหญิงอายุ 45 ปี เป็นเบาหวานมา 3 ปี ควบคุมด้วยยา Metformin และ Glipizide อาการเหนื่อยง่าย หิวน้ำบ่อย ตรวจน้ำตาลเลือดที่บ้านช่วง 2 สัปดาห์ที่ผ่านมาอยู่ในระดับ 130-160 mg/dL</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตามเบาหวาน ตรวจน้ำตาลเลือดที่บ้าน 130-160 mg/dL<br><br><strong>PI:</strong> ผู้ป่วยหญิงอายุ 45 ปี เป็นเบาหวานมา 3 ปี ควบคุมด้วยยา Metformin และ Glipizide</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 130/85 mmHg, HR 75 bpm, RR 18/min, BT 36.8 C. HEENT: not remarkable. Chest: Clear breath sounds. Abdomen: Soft, non-tender. Extremities: No edema.</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 130/85 mmHg, HR 75 bpm, RR 18/min, BT 36.8 C. HEENT: not remarkable.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
                                     <ul class="detail-list">
-                                        <li><span>FPG</span><span class="lab-result"><span class="lab-value lab-abnormal">145 mg/dL</span><span class="lab-reference">(70-100)</span></span></li>
-                                        <li><span>HbA1c</span><span class="lab-result"><span class="lab-value lab-abnormal">7.8%</span><span class="lab-reference">(<7.0%)</span></span></li>
+                                        <li><span>FPG</span><span class="lab-abnormal">145 mg/dL</span></li>
+                                        <li><span>HbA1c</span><span class="lab-abnormal">7.8%</span></li>
                                     </ul>
                                 </div>
                                 <div class="detail-card">
@@ -266,12 +278,22 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">ยาที่สั่ง</div>
-                                    <div class="medication-item"><div class="medication-name">Metformin 500mg</div><div class="medication-dose">วันละ 3 ครั้ง หลังอาหารเช้า, กลางวัน, เย็น</div></div>
+                                    <div class="medication-item"><div class="medication-name">Metformin 500mg</div><div class="medication-dose">วันละ 3 ครั้ง หลังอาหาร</div></div>
                                     <div class="medication-item"><div class="medication-name">Glipizide 5mg</div><div class="medication-dose">วันละ 1 ครั้ง ก่อนอาหารเช้า</div></div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Treatment Plan</div>
                                     <div class="cc-pi-text">ควบคุมระดับน้ำตาลด้วยยาเดิม แนะนำการออกกำลังกายและควบคุมอาหาร นัดติดตามผลอีกครั้งใน 1 เดือน</div>
+                                </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">แนะนำลดปริมาณข้าวและของหวาน / แนะนำบันทึกระดับน้ำตาลก่อนนอนและหลังอาหารเพื่อติดตามสภาพการควบคุม</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">ให้คำแนะนำการใช้ยา Metformin และ Glipizide / แนะนำการวัดน้ำตาลด้วย glucometer ที่บ้านและบันทึกผล</div>
                                 </div>
                             </div>
                         </div>
@@ -292,6 +314,7 @@
                             <button class="date-button" onclick="showSingleVisit('hypertension', 'hypertension-visit-2')">22 ก.พ. 2567</button>
                             <button class="date-button" onclick="showSingleVisit('hypertension', 'hypertension-visit-1')">10 ม.ค. 2567</button>
                         </div>
+
                         <div id="hypertension-visit-4" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -300,11 +323,11 @@
                             <div class="detail-grid">
                                 <div class="detail-card">
                                     <div class="detail-title">CC/PI</div>
-                                    <div class="cc-pi-text"><strong>CC:</strong> ตรวจติดตามความดันโลหิต<br><br><strong>PI:</strong> ความดันโลหิตที่บ้านอยู่ระหว่าง 125-135/75-85 mmHg ไม่มีอาการปวดศีรษะหรือเวียนศีรษะ</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> ตรวจติดตามความดันโลหิต<br><br><strong>PI:</strong> ความดันที่บ้าน 125-135/75-85 ไม่มีอาการผิดปกติ</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 132/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
+                                    <div class="cc-pi-text">Vitals: BP 132/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
@@ -321,10 +344,21 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Treatment Plan</div>
-                                    <div class="cc-pi-text">ควบคุมความดันโลหิตได้ดีด้วยยาเดิม นัดติดตามผลอีกครั้งใน 3 เดือน</div>
+                                    <div class="cc-pi-text">ควบคุมความดันได้ดี นัดติดตามผลใน 3 เดือน</div>
+                                </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">แนะนำลดการบริโภคเกลือและควบคุมน้ำหนัก / แนะนำการวัดความดันที่บ้านเช้า-เย็นและบันทึก</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">สอนการวัดความดันที่บ้าน / ตรวจ vital signs ก่อนกลับบ้านและบันทึกใน chart</div>
                                 </div>
                             </div>
                         </div>
+
                         <div id="hypertension-visit-3" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -333,11 +367,11 @@
                             <div class="detail-grid">
                                 <div class="detail-card">
                                     <div class="detail-title">CC/PI</div>
-                                    <div class="cc-pi-text"><strong>CC:</strong> ตรวจติดตามความดันโลหิต<br><br><strong>PI:</strong> ความดันโลหิตที่บ้าน 140-150/90-95 mmHg ยังมีอาการปวดศีรษะตอนเช้า</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> ตรวจติดตามความดันโลหิต<br><br><strong>PI:</strong> ความดันที่บ้าน 140-150/90-95 มีอาการปวดศีรษะ</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 148/92 mmHg, HR 80 bpm. Other findings: No significant changes.</div>
+                                    <div class="cc-pi-text">Vitals: BP 148/92 mmHg, HR 80 bpm. Other findings: No significant changes.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
@@ -350,14 +384,25 @@
                                 <div class="detail-card">
                                     <div class="detail-title">ยาที่สั่ง</div>
                                     <div class="medication-item"><div class="medication-name">Amlodipine 5mg</div><div class="medication-dose">วันละ 1 ครั้ง ก่อนนอน</div></div>
-                                    <div class="medication-item"><div class="medication-name">Losartan 50mg</div><div class="medication-dose">เพิ่มยาใหม่ วันละ 1 ครั้ง หลังอาหารเช้า</div></div>
+                                    <div class="medication-item"><div class="medication-name">Losartan 50mg</div><div class="medication-dose">เพิ่มใหม่ วันละ 1 ครั้ง หลังอาหารเช้า</div></div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Treatment Plan</div>
-                                    <div class="cc-pi-text">เพิ่มยา Losartan เพื่อช่วยควบคุมความดันโลหิตที่ยังไม่ถึงเป้าหมาย นัดติดตามผลใน 1 เดือน</div>
+                                    <div class="cc-pi-text">เพิ่มยา Losartan เพื่อลดความดัน นัดติดตามใน 1 เดือน</div>
+                                </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">ให้คำแนะนำเรื่องการปรับพฤติกรรมอาหารและการออกกำลังกาย / แนะนำติดตามความดันรายวัน</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">จับตาการตอบสนองต่อยใหม่และบันทึก BP ก่อน-หลังให้ยา / ให้คำแนะนำการใช้ยาแก่ผู้ป่วย</div>
                                 </div>
                             </div>
                         </div>
+
                         <div id="hypertension-visit-2" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -366,11 +411,11 @@
                             <div class="detail-grid">
                                 <div class="detail-card">
                                     <div class="detail-title">CC/PI</div>
-                                    <div class="cc-pi-text"><strong>CC:</strong> มาพบแพทย์เพื่อตรวจสุขภาพ<br><br><strong>PI:</strong> มีอาการปวดศีรษะช่วงเช้าเป็นพัก ๆ วัดความดันโลหิตที่บ้านได้ 150/95 mmHg</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาพบแพทย์เพื่อตรวจสุขภาพ<br><br><strong>PI:</strong> มีอาการปวดศีรษะช่วงเช้า วัดความดันได้ 150/95 mmHg</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 150/95 mmHg, HR 85 bpm. Other findings: No significant changes.</div>
+                                    <div class="cc-pi-text">Vitals: BP 150/95 mmHg, HR 85 bpm. Other findings: No significant changes.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
@@ -386,10 +431,21 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Treatment Plan</div>
-                                    <div class="cc-pi-text">วินิจฉัยความดันโลหิตสูง เริ่มยา Amlodipine 5mg นัดติดตามผลใน 1 เดือน</div>
+                                    <div class="cc-pi-text">วินิจฉัยความดันโลหิตสูง เริ่มยา Amlodipine นัดติดตาม 1 เดือน</div>
+                                </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">แนะนำงดอาหารเค็มและเครื่องดื่มที่มีคาเฟอีนก่อนวัดความดัน / ติดตามอาการปวดศีรษะ</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">สังเกตอาการผิดปกติ เช่น เวียนศีรษะ แขนขาอ่อนแรง / ให้คำแนะนำการปฏิบัติตัวเบื้องต้น</div>
                                 </div>
                             </div>
                         </div>
+
                         <div id="hypertension-visit-1" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -402,7 +458,7 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 135/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
+                                    <div class="cc-pi-text">Vitals: BP 135/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
@@ -418,7 +474,17 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Treatment Plan</div>
-                                    <div class="cc-pi-text">แนะนำให้ควบคุมอาหารเค็มและออกกำลังกายเพื่อลดความดันโลหิต นัดติดตามผลใน 1 เดือน</div>
+                                    <div class="cc-pi-text">แนะนำให้ควบคุมอาหารเค็มและออกกำลังกายเพื่อลดความดัน นัดติดตาม 1 เดือน</div>
+                                </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">ติดตามรูปแบบการนอนและความเครียดที่อาจมีผลต่อความดัน / แนะนำบันทึกค่าความดันที่บ้าน</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">สอนเทคนิคการวัดความดันและการจดบันทึก / ให้คำแนะนำการปรับพฤติกรรม</div>
                                 </div>
                             </div>
                         </div>
@@ -438,6 +504,7 @@
                             <button class="date-button" onclick="showSingleVisit('dyslipidemia', 'dyslipidemia-visit-2')">05 ก.พ. 2567</button>
                             <button class="date-button" onclick="showSingleVisit('dyslipidemia', 'dyslipidemia-visit-1')">10 ม.ค. 2567</button>
                         </div>
+
                         <div id="dyslipidemia-visit-3" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -446,11 +513,11 @@
                             <div class="detail-grid">
                                 <div class="detail-card">
                                     <div class="detail-title">CC/PI</div>
-                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตามไขมัน<br><br><strong>PI:</strong> ทานยา Atorvastatin สม่ำเสมอและควบคุมอาหารไขมัน</div>
+                                    <div class="cc-pi-text"><strong>CC:</strong> มาตรวจติดตามไขมัน<br><br><strong>PI:</strong> ทานยา Atorvastatin สม่ำเสมอและควบคุมอาหาร</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 130/85 mmHg, HR 75 bpm. Other findings: No significant changes.</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 130/85 mmHg, HR 75 bpm.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
@@ -472,8 +539,19 @@
                                     <div class="detail-title">Treatment Plan</div>
                                     <div class="cc-pi-text">ระดับไขมันกลับสู่ปกติ ให้ทานยาเดิมต่อไป นัดติดตามผลใน 6 เดือน</div>
                                 </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">แนะนำลดอาหารไขมันทรานส์และเพิ่มผักผลไม้ / ติดตามน้ำหนักและระดับไขมันในเลือด</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">สอนวิธีการรับประทานยาและการสังเกตอาการข้างเคียง / ติดตาม adherence และให้คำแนะนำทางโภชนาการ</div>
+                                </div>
                             </div>
                         </div>
+
                         <div id="dyslipidemia-visit-2" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -486,7 +564,7 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 140/90 mmHg, HR 80 bpm. Other findings: No significant changes.</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 140/90 mmHg, HR 80 bpm.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
@@ -506,10 +584,21 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Treatment Plan</div>
-                                    <div class="cc-pi-text">ระดับไขมันยังสูง ปรับเพิ่มยา Atorvastatin เป็น 40mg และแนะนำให้ควบคุมอาหาร นัดติดตามผลใน 1 เดือน</div>
+                                    <div class="cc-pi-text">ระดับไขมันยังสูง ปรับเพิ่มยา และแนะนำควบคุมอาหาร นัดติดตาม 1 เดือน</div>
+                                </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">แนะนำบันทึกการกินและลดของมันของทอด / แนะนำออกกำลังกายที่เพิ่มการใช้พลังงาน</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">ติดตาม adherence ต่อการปรับขนาดยา / ให้คำปรึกษาด้านโภชนาการเบื้องต้น</div>
                                 </div>
                             </div>
                         </div>
+
                         <div id="dyslipidemia-visit-1" class="visit-details-card-container">
                             <div class="timeline-point-container">
                                 <div class="timeline-point"></div>
@@ -522,7 +611,7 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">PE</div>
-                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 135/88 mmHg, HR 78 bpm. Other findings: No significant changes.</div>
+                                    <div class="cc-pi-text">General appearance: normal. Vitals: BP 135/88 mmHg, HR 78 bpm.</div>
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Lab</div>
@@ -542,7 +631,17 @@
                                 </div>
                                 <div class="detail-card">
                                     <div class="detail-title">Treatment Plan</div>
-                                    <div class="cc-pi-text">วินิจฉัย: ไขมันในเลือดสูง เริ่มยา Atorvastatin 20mg แนะนำปรับเปลี่ยนพฤติกรรมการกินและออกกำลังกาย นัดติดตามผลใน 1 เดือน</div>
+                                    <div class="cc-pi-text">วินิจฉัยไขมันในเลือดสูง เริ่มยาและให้คำแนะนำด้านโภชนาการ นัดติดตาม 1 เดือน</div>
+                                </div>
+
+                                <!-- การ์ดใหม่ -->
+                                <div class="detail-card">
+                                    <div class="detail-title">Healthcare Note</div>
+                                    <div class="cc-pi-text">ให้ความรู้เรื่องความเสี่ยงของไขมันสูงต่อโรคหัวใจและหลอดเลือด / แนะนำเลี่ยงอาหารทอด</div>
+                                </div>
+                                <div class="detail-card">
+                                    <div class="detail-title">Nursing Intervention</div>
+                                    <div class="cc-pi-text">ติดตามอาการไม่พึงประสงค์จาก statin และให้คำแนะนำการทานยาในเวลาที่เหมาะสม</div>
                                 </div>
                             </div>
                         </div>

@@ -299,8 +299,7 @@ body {
     font-size: 12px;     /* ปรับขนาดตัวอักษรให้เล็กลง */
     cursor: pointer;
     transition: all 0.3s ease;
-    /* flex: 1; */ /* ลบ flex: 1 เพื่อให้ขนาดพอดีกับเนื้อหา */
-    min-width: unset; /* ลบ min-width */
+    min-width: unset;
     text-align: center;
 }
 
@@ -323,12 +322,28 @@ body {
     border-bottom: 1px solid #e2e8f0;
 }
 
-
 /* General detail grid styling */
+/* ปรับเป็น 4 คอลัมน์ เพื่อให้แสดงเป็น 2 แถว x 4 การ์ด */
 .detail-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
     gap: 12px;
+}
+
+/* responsive: เล็กลงเป็น 2 คอลัมน์ */
+@media (max-width: 1000px) {
+    .detail-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .main-container {
+        grid-template-columns: 1fr; /* ซ่อน sidebar เมื่อจอเล็ก */
+        height: auto;
+    }
+
+    body {
+        overflow: auto;
+    }
 }
 
 .detail-card {
