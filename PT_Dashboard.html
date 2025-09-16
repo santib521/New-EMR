@@ -20,10 +20,10 @@
                     <div class="stat-value">15</div>
                     <div class="stat-label">ครั้งที่มา</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value">3</div>
-                    <div class="stat-label">อาการหลัก</div>
-                </div>
+                <div class="stat-item" onclick="showDetails('main-symptoms', this)">
+    <div class="stat-value">3</div>
+    <div class="stat-label">อาการหลัก</div>
+</div>
                 <div class="stat-item" onclick="toggleMedicationModal()">
                     <div class="stat-value">5</div>
                     <div class="stat-label">ยาประจำ</div>
@@ -239,7 +239,6 @@
                                     <div class="cc-pi-text">ปรับเพิ่มยา Metformin และเพิ่ม Insulin Glargine เพื่อควบคุมระดับน้ำตาล นัดติดตามผลอีกครั้งใน 1 เดือน</div>
                                 </div>
 
-                                <!-- เพิ่มการ์ดใหม่ 2 ใบ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">แนะนำลดอาหารหวาน มัน เค็ม / แนะนำการออกกำลังกายสม่ำเสมออย่างน้อย 150 นาทีต่อสัปดาห์ / นัดติดตามน้ำหนักและระดับน้ำตาลใน 1 เดือน</div>
@@ -286,7 +285,6 @@
                                     <div class="cc-pi-text">ควบคุมระดับน้ำตาลด้วยยาเดิม แนะนำการออกกำลังกายและควบคุมอาหาร นัดติดตามผลอีกครั้งใน 1 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">แนะนำลดปริมาณข้าวและของหวาน / แนะนำบันทึกระดับน้ำตาลก่อนนอนและหลังอาหารเพื่อติดตามสภาพการควบคุม</div>
@@ -347,7 +345,6 @@
                                     <div class="cc-pi-text">ควบคุมความดันได้ดี นัดติดตามผลใน 3 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">แนะนำลดการบริโภคเกลือและควบคุมน้ำหนัก / แนะนำการวัดความดันที่บ้านเช้า-เย็นและบันทึก</div>
@@ -391,7 +388,6 @@
                                     <div class="cc-pi-text">เพิ่มยา Losartan เพื่อลดความดัน นัดติดตามใน 1 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">ให้คำแนะนำเรื่องการปรับพฤติกรรมอาหารและการออกกำลังกาย / แนะนำติดตามความดันรายวัน</div>
@@ -434,7 +430,6 @@
                                     <div class="cc-pi-text">วินิจฉัยความดันโลหิตสูง เริ่มยา Amlodipine นัดติดตาม 1 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">แนะนำงดอาหารเค็มและเครื่องดื่มที่มีคาเฟอีนก่อนวัดความดัน / ติดตามอาการปวดศีรษะ</div>
@@ -477,7 +472,6 @@
                                     <div class="cc-pi-text">แนะนำให้ควบคุมอาหารเค็มและออกกำลังกายเพื่อลดความดัน นัดติดตาม 1 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">ติดตามรูปแบบการนอนและความเครียดที่อาจมีผลต่อความดัน / แนะนำบันทึกค่าความดันที่บ้าน</div>
@@ -540,7 +534,6 @@
                                     <div class="cc-pi-text">ระดับไขมันกลับสู่ปกติ ให้ทานยาเดิมต่อไป นัดติดตามผลใน 6 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">แนะนำลดอาหารไขมันทรานส์และเพิ่มผักผลไม้ / ติดตามน้ำหนักและระดับไขมันในเลือด</div>
@@ -587,7 +580,6 @@
                                     <div class="cc-pi-text">ระดับไขมันยังสูง ปรับเพิ่มยา และแนะนำควบคุมอาหาร นัดติดตาม 1 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">แนะนำบันทึกการกินและลดของมันของทอด / แนะนำออกกำลังกายที่เพิ่มการใช้พลังงาน</div>
@@ -634,7 +626,6 @@
                                     <div class="cc-pi-text">วินิจฉัยไขมันในเลือดสูง เริ่มยาและให้คำแนะนำด้านโภชนาการ นัดติดตาม 1 เดือน</div>
                                 </div>
 
-                                <!-- การ์ดใหม่ -->
                                 <div class="detail-card">
                                     <div class="detail-title">Healthcare Note</div>
                                     <div class="cc-pi-text">ให้ความรู้เรื่องความเสี่ยงของไขมันสูงต่อโรคหัวใจและหลอดเลือด / แนะนำเลี่ยงอาหารทอด</div>
