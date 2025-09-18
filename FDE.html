@@ -151,7 +151,7 @@
             }
             .pvs-page-container {
                 width: 210mm;
-                height: 297mm;
+                min-height: 297mm;
                 padding: 15mm 20mm;
                 box-shadow: none;
                 page-break-after: always;
@@ -182,6 +182,36 @@
             .highlight-change {
                 background-color: transparent !important;
                 color: inherit !important;
+            }
+            #pfe-doc {
+                page-break-before: always !important; 
+                padding-top: 40px !important; /* เว้นระยะด้านบนของเอกสารให้ความรู้ */
+            }
+            hr.border-gray-300 {
+                display: none !important; 
+            }
+            #global-print-header {
+                display: block !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fff;
+                z-index: 1000;
+                border-bottom: 1px solid #ccc;
+                padding: 8px 20mm; /* Match document padding */
+                font-size: 12px;
+                color: #555;
+            }
+            #global-print-header span {
+                font-weight: bold;
+                color: #333;
+            }
+            #documents-container {
+                padding-top: 40px !important; /* เว้นระยะด้านบนของเอกสารทั้งหมด */
+            }
+            .pvs-header {
+                display: none !important; /* ซ่อน Header เดิมของหน้าแรกเมื่อสั่งพิมพ์ */
             }
         }
     </style>
@@ -256,11 +286,11 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
     </div>
 
     <div id="documents-container" class="hidden">
-        <div class="header-print-all-pages no-print">
-            <h2 class="text-xl font-bold">โรงพยาบาลรักษ์สุขภาพ</h2>
-            <p class="text-sm">123 ถนนสุขุมวิท, แขวงคลองเตย, กรุงเทพมหานคร 10110</p>
+        <div id="global-print-header" class="hidden no-print">
+            <p>ชื่อ-นามสกุล: <span id="header-name"></span></p>
+            <p>HN: <span id="header-hn"></span> | วันที่ทำการรักษา: <span id="header-date"></span></p>
         </div>
-
+        
         <div class="flex justify-center mb-6 no-print space-x-2">
             <button id="print-btn" class="flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                 พิมพ์เอกสาร
@@ -306,20 +336,40 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
     const parsePatientData = (text) => {
         const data = {};
         const lines = text.split('\n');
-        lines.forEach(line => {
-            if (line.includes(':')) {
-                const [key, ...valueParts] = line.split(':');
-                const value = valueParts.join(':').trim();
-                const cleanKey = key.trim().replace(' ', '');
-                data[cleanKey] = value;
+        let currentKey = null;
+        let currentValue = [];
+        
+        // Use a more robust loop to handle key-value pairs
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (trimmedLine.length === 0) continue; // Skip empty lines
+
+            const colonIndex = trimmedLine.indexOf(':');
+
+            // If the line contains a colon and is not part of a multiline item (like medication list item)
+            if (colonIndex > 0 && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('*')) {
+                if (currentKey) {
+                    data[currentKey] = currentValue.join('\n').trim();
+                }
+                const [key, ...valueParts] = trimmedLine.split(':');
+                currentKey = key.trim().replace(/\s+/g, '');
+                currentValue = [valueParts.join(':').trim()];
+            } else if (currentKey) {
+                // Continuation of the previous key
+                currentValue.push(trimmedLine);
             }
-        });
+        }
+        
+        if (currentKey) {
+            data[currentKey] = currentValue.join('\n').trim();
+        }
+        
         return data;
     };
 
     const callGeminiApi = async (prompt, systemPrompt) => {
-        const apiKey = "AIzaSyDb3rlVMCfml698cSaTTuoFYpLJDk4-hpU"; // <<<--- กรุณาเปลี่ยน API Key ตรงนี้
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        const apiKey = "AIzaSyC7r8GZlyuDwjSL9MdelPzrNMoEYIJCuuQ"; // <<<--- กรุณาเปลี่ยน API Key ตรงนี้
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
             systemInstruction: {
@@ -334,7 +384,7 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
         const result = await response.json();
         return result?.candidates?.[0]?.content?.parts?.[0]?.text;
     };
-
+    
     const generateDocuments = async (event) => {
         event.preventDefault();
         
@@ -354,47 +404,51 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
         
         const currentDate = new Date().toLocaleDateString('th-TH', { dateStyle: 'long' });
 
-        // Correctly parse medication from the textarea
+        // Update the global print header
+        document.getElementById('header-name').textContent = patientData.Name || '-';
+        document.getElementById('header-hn').textContent = patientData.HN || '-';
+        document.getElementById('header-date').textContent = currentDate;
+        document.getElementById('global-print-header').classList.remove('hidden');
+
         const medicationInput = patientData.Medication || '';
         const medicationLines = medicationInput.split('\n').filter(line => line.trim() !== '');
         const medicationList = medicationLines.length > 0
-            ? medicationLines.map(item => `<li><div class="item-details"><h4>${item.trim().replace(/^-/, '').trim().split(':')[0]}</h4><p><strong>การใช้:</strong> ${item.trim().replace(/^-/, '').trim().split(':').slice(1).join(':').trim()}</p></div></li>`).join('')
-            : '<li>ไม่มียาที่ต้องรับประทาน</li>';
+            ? medicationLines.map(item => `<li><div contenteditable="true">${item.trim().replace(/^-/, '').trim()}</div></li>`).join('')
+            : '<li><div contenteditable="true">ไม่มียาที่ต้องรับประทาน</div></li>';
 
         const labList = patientData.Lab ? patientData.Lab.split(',').map(item => {
             const [name, value] = item.trim().split(' ');
-            return `<tr><td>${name || '-'}</td><td>${value || '-'}</td><td>-</td><td>-</td></tr>`;
-        }).join('') : `<tr><td colspan="4">ไม่มีผลการตรวจทางห้องปฏิบัติการที่สำคัญ</td></tr>`;
+            return `<tr><td><span contenteditable="true">${name || '-'}</span></td><td><span contenteditable="true">${value || '-'}</span></td><td><span contenteditable="true">-</span></td><td><span contenteditable="true">-</span></td></tr>`;
+        }).join('') : `<tr><td colspan="4"><span contenteditable="true">ไม่มีผลการตรวจทางห้องปฏิบัติการที่สำคัญ</span></td></tr>`;
         const xrayResult = patientData['Xrayresult'] || 'ไม่มีข้อมูล';
         const diagnosisText = patientData['Diagnosis(ICD/SNOMED)'] || '-';
         const translatedDiagnosis = 'ภาวะอ่อนเพลียเรื้อรังและภาวะอาหารไม่ย่อย';
 
-        // Generate Patient Visit Summary UI
         summaryContent.innerHTML = `
             <div class="pvs-page-container">
                 <div class="pvs-header">
                     <div class="pvs-patient-info">
-                        <p><strong>ชื่อ-นามสกุล:</strong> ${patientData.Name || '-'}</p>
-                        <p><strong>HN:</strong> ${patientData.HN || '-'}</p>
-                        <p><strong>วันที่รักษา:</strong> ${currentDate}</p>
+                        <p><strong>ชื่อ-นามสกุล:</strong> <span contenteditable="true">${patientData.Name || '-'}</span></p>
+                        <p><strong>HN:</strong> <span contenteditable="true">${patientData.HN || '-'}</span></p>
+                        <p><strong>วันที่รักษา:</strong> <span contenteditable="true">${currentDate}</span></p>
                     </div>
                     <div class="pvs-summary-card">
-                        <p class="diagnosis">${diagnosisText}</p>
-                        <p><strong>แพทย์ผู้ดูแล:</strong> นพ. เก่งกาจ สุขภาพดี</p>
+                        <p class="diagnosis" contenteditable="true">${diagnosisText}</p>
+                        <p><strong>แพทย์ผู้ดูแล:</strong> <span contenteditable="true">นพ. เก่งกาจ สุขภาพดี</span></p>
                     </div>
                 </div>
                 
-                <h1 class="pvs-h1">สรุปประวัติการรักษาผู้ป่วย</h1>
+                <h1 class="pvs-h1"><span contenteditable="true">สรุปประวัติการรักษาผู้ป่วย</span></h1>
                 
-                <h2 class="pvs-h2">1. การวินิจฉัยโรค</h2>
+                <h2 class="pvs-h2"><span contenteditable="true">1. การวินิจฉัยโรค</span></h2>
                 <div class="pvs-section-card">
-                    <p><strong>ผลการวินิจฉัยหลัก:</strong> ${translatedDiagnosis}</p>
-                    <p><strong>ข้อมูลเพิ่มเติม:</strong> ${patientData.CC || '-'}</p>
+                    <p><strong>ผลการวินิจฉัยหลัก:</strong> <span contenteditable="true">${translatedDiagnosis}</span></p>
+                    <p><strong>ข้อมูลเพิ่มเติม:</strong> <span contenteditable="true">${patientData.CC || '-'}</span></p>
                 </div>
                 
-                <h2 class="pvs-h2">2. ผลการตรวจ</h2>
+                <h2 class="pvs-h2"><span contenteditable="true">2. ผลการตรวจ</span></h2>
                 <div class="pvs-section-card">
-                    <h3 class="pvs-h3">ผลการตรวจทางห้องปฏิบัติการ (Lab Results)</h3>
+                    <h3 class="pvs-h3"><span contenteditable="true">ผลการตรวจทางห้องปฏิบัติการ (Lab Results)</span></h3>
                     <table class="pvs-lab-table">
                         <thead>
                             <tr>
@@ -409,34 +463,34 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
                         </tbody>
                     </table>
                     
-                    <h3 class="pvs-h3">ผลการตรวจภาพถ่าย (X-ray)</h3>
-                    <p><strong>ผล:</strong> ${xrayResult}</p>
+                    <h3 class="pvs-h3"><span contenteditable="true">ผลการตรวจภาพถ่าย (X-ray)</span></h3>
+                    <p><strong>ผล:</strong> <span contenteditable="true">${xrayResult}</span></p>
                 </div>
                 
-                <h2 class="pvs-h2">3. รายการยาที่ได้รับ</h2>
+                <h2 class="pvs-h2"><span contenteditable="true">3. รายการยาที่ได้รับ</span></h2>
                 <div class="pvs-section-card">
                     <ul>
                         ${medicationList}
                     </ul>
                 </div>
                 
-                <h2 class="pvs-h2">4. คำแนะนำ</h2>
+                <h2 class="pvs-h2"><span contenteditable="true">4. คำแนะนำ</span></h2>
                 <div class="pvs-section-card">
                     <p><strong>การดูแลตนเอง:</strong></p>
                     <ul>
-                        <li>พักผ่อนให้เพียงพอและดื่มน้ำมากๆ</li>
-                        <li>ทานอาหารที่มีประโยชน์และถูกสุขลักษณะ</li>
-                        <li>หากมีอาการไม่ดีขึ้น ควรกลับมาพบแพทย์</li>
+                        <li><div contenteditable="true">พักผ่อนให้เพียงพอและดื่มน้ำมากๆ</div></li>
+                        <li><div contenteditable="true">ทานอาหารที่มีประโยชน์และถูกสุขลักษณะ</div></li>
+                        <li><div contenteditable="true">หากมีอาการไม่ดีขึ้น ควรกลับมาพบแพทย์</div></li>
                     </ul>
                 </div>
                 
-                <h2 class="pvs-h2">5. การนัดหมาย</h2>
+                <h2 class="pvs-h2"><span contenteditable="true">5. การนัดหมาย</span></h2>
                 <div class="pvs-section-card">
                     <p><strong>นัดหมายครั้งถัดไป:</strong></p>
-                    <p><strong>วันที่:</strong> -</p>
-                    <p><strong>สถานที่:</strong> -</p>
-                    <p><strong>เวลา:</strong> -</p>
-                    <p><strong>แพทย์:</strong> -</p>
+                    <p><strong>วันที่:</strong> <span contenteditable="true">-</span></p>
+                    <p><strong>สถานที่:</strong> <span contenteditable="true">-</span></p>
+                    <p><strong>เวลา:</strong> <span contenteditable="true">-</span></p>
+                    <p><strong>แพทย์:</strong> <span contenteditable="true">-</span></p>
                 </div>
             </div>
         `;
@@ -476,6 +530,7 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
 
         loadingIndicator.classList.add('hidden');
         if (generatedText) {
+            pfeContent.dataset.originalText = generatedText;
             const sections = generatedText.split('#').filter(s => s.trim() !== '');
             let pfeHtml = '';
             
@@ -485,8 +540,11 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
                 const content = lines.slice(1).join('\n').trim();
 
                 const contentList = content.split('\n').map(item => {
-                    const cleanItem = item.trim().replace(/^-?\s*/, '');
-                    return `<li><div contenteditable="true">${cleanItem}</div></li>`;
+                    const cleanItem = item.trim().replace(/^[*•\s-]+/, '').trim();
+                    if (cleanItem) {
+                        return `<li><div contenteditable="true">${cleanItem}</div></li>`;
+                    }
+                    return '';
                 }).join('');
 
                 pfeHtml += `
@@ -499,16 +557,14 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
                 `;
             });
             
-            pfeContent.dataset.originalText = generatedText;
             pfeContent.innerHTML = pfeHtml;
+
         } else {
             pfeContent.innerHTML = `<div class="p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
                 <p>ไม่สามารถสร้างคำแนะนำได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง</p>
             </div>`;
         }
     };
-    
-    // The previous highlighting logic was complex and caused issues, so it has been removed for better stability and a smoother user experience.
     
     const handlePrint = () => {
         window.print();
