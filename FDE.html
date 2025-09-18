@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบ HIS: สร้างเอกสารผู้ป่วย</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* Base Styles & Typography */
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Sarabun', sans-serif;
             background-color: #f3f4f6;
+            color: #333;
         }
         .container-content {
             max-width: 960px;
@@ -24,23 +26,114 @@
         }
         [contenteditable]:focus {
             outline: none;
-            background-color: #ffffff; /* เปลี่ยนเป็นสีขาว ไม่ให้มีสีเหลืองขึ้นเมื่อคลิก */
+            background-color: #ffffff;
         }
-        /* CSS สำหรับการไฮไลต์ข้อความที่แก้ไข */
-        .highlight-change {
-            background-color: #fff3cd; /* สีเหลืองอ่อนสำหรับไฮไลต์ */
-            border-radius: 4px;
-            padding: 2px 4px;
-            margin: 0 -4px;
+        
+        /* --- Styles for Patient Visit Summary --- */
+        .pvs-page-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: auto;
+            background: #fff;
+            padding: 20mm;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
         }
+        .pvs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .pvs-patient-info p {
+            margin: 0;
+            font-size: 14px;
+        }
+        .pvs-summary-card {
+            background-color: #d4e1f1;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .pvs-summary-card p {
+            margin: 0;
+            font-size: 14px;
+            color: #1a4f72;
+        }
+        .pvs-summary-card .diagnosis {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #0056b3;
+        }
+        .pvs-h1 {
+            text-align: center;
+            border-bottom: 3px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a4f72;
+        }
+        .pvs-h2 {
+            border-bottom: 2px solid #e0e7ee;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a4f72;
+        }
+        .pvs-h3 {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .pvs-section-card {
+            border: 1px solid #e0e7ee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .pvs-section-card p, .pvs-section-card li {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .pvs-section-card ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        .pvs-section-card li {
+            margin-bottom: 5px;
+        }
+        .pvs-section-card li:last-child {
+            border-bottom: none;
+        }
+        .pvs-lab-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .pvs-lab-table th, .pvs-lab-table td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+        }
+        .pvs-lab-table th {
+            background-color: #f2f2f2;
+            font-weight: 500;
+        }
+        .pvs-lab-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        /* Print Styles */
         @media print {
-            @page {
-                margin: 1.5cm 1cm;
-            }
             body {
                 background-color: #ffffff !important;
-                font-family: Arial, sans-serif;
-                font-size: 11pt;
             }
             .no-print {
                 display: none !important;
@@ -56,7 +149,18 @@
                 padding: 0 !important;
                 margin-bottom: 2rem !important;
             }
+            .pvs-page-container {
+                width: 210mm;
+                height: 297mm;
+                padding: 15mm 20mm;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .pvs-page-container:last-of-type {
+                page-break-after: avoid;
+            }
             .header-print {
+                display: block;
                 text-align: center;
                 margin-bottom: 1.5rem;
                 border-bottom: 2px solid #333;
@@ -72,36 +176,9 @@
                 font-size: 0.8rem;
                 color: #666;
             }
-            h1.report-title {
-                font-size: 1.5rem !important;
-                font-weight: bold !important;
-                text-align: center !important;
-                color: #333 !important;
-                margin-bottom: 1rem !important;
-            }
-            .patient-info strong, .document-section strong {
-                color: #333 !important;
-            }
-            .header-print-all-pages {
-                display: block;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                background-color: #ffffff;
-                border-bottom: 1px solid #ddd;
-                padding: 1rem;
-                text-align: center;
-                font-size: 12pt;
-                z-index: 1000;
-            }
-            .documents-content-padding {
-                padding-top: 2cm;
-            }
             #pfe-content[contenteditable]:focus {
-                background-color: transparent; /* Remove highlight on print */
+                background-color: transparent;
             }
-            /* ซ่อนไฮไลต์เมื่อสั่งพิมพ์ */
             .highlight-change {
                 background-color: transparent !important;
                 color: inherit !important;
@@ -113,7 +190,6 @@
 
 <div id="app" class="container-content">
     
-    <!-- Input Form Section -->
     <div id="input-form" class="no-print paper-container mb-8">
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-700">สร้างเอกสารผู้ป่วยจากข้อมูล AI</h1>
         <div class="p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 rounded-lg mb-6">
@@ -146,11 +222,11 @@
             <div>
                 <label for="patientDataInput" class="block text-sm font-medium text-gray-700">ข้อมูลผู้ป่วย (วางข้อมูลจากไฟล์ข้อความที่นี่)</label>
                 <textarea id="patientDataInput" name="patientDataInput" rows="10" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>Patient Data:
-HN: 01-25-00360
-Name: นางสาว สมใจ  ใจดี
+HN: 98765
+Name: นางสาวอรุณี รักชาติ
 Language: Thai
 Gender: หญิง
-Age: 45 ปี
+Age: 52 ปี
 Height: 158 cm
 Weight: 65 kg
 Temp: 37.0 C
@@ -179,9 +255,7 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
         </form>
     </div>
 
-    <!-- Generated Documents Section -->
     <div id="documents-container" class="hidden">
-        <!-- New Print-specific Header that repeats on every page -->
         <div class="header-print-all-pages no-print">
             <h2 class="text-xl font-bold">โรงพยาบาลรักษ์สุขภาพ</h2>
             <p class="text-sm">123 ถนนสุขุมวิท, แขวงคลองเตย, กรุงเทพมหานคร 10110</p>
@@ -193,22 +267,13 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
             </button>
         </div>
         
-        <!-- Patient Visit Summary -->
         <div id="visit-summary-doc" class="paper-container mb-8">
-            <div class="header-print">
-                <h1 class="text-2xl font-bold mb-2">สรุปการรักษาผู้ป่วย (Patient Visit Summary)</h1>
-                <p class="text-sm text-gray-500">สำหรับผู้ป่วยและครอบครัว</p>
-                <hr class="my-2 border-gray-300">
-            </div>
-            
             <div id="summary-content" class="text-sm space-y-4">
-                <!-- Content will be generated by JS -->
-            </div>
+                </div>
         </div>
 
         <hr class="border-gray-300 my-8">
 
-        <!-- Patient and Family Education (AI-generated) -->
         <div id="pfe-doc" class="paper-container">
             <div class="header-print">
                 <h1 class="text-2xl font-bold mb-2">เอกสารให้ความรู้แก่ผู้ป่วยและครอบครัว (Patient and Family Education)</h1>
@@ -224,7 +289,6 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
                     </svg>
                     กำลังสร้างคำแนะนำ... กรุณารอสักครู่
                 </div>
-                <!-- Content will be generated by JS -->
             </div>
         </div>
     </div>
@@ -238,12 +302,7 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
     const pfeContent = document.getElementById('pfe-content');
     const printBtn = document.getElementById('print-btn');
     const loadingIndicator = document.getElementById('loadingIndicator');
-    
-    // Original text state
-    let originalText = '';
-    let isHighlightingEnabled = false;
 
-    // Function to parse the structured text input
     const parsePatientData = (text) => {
         const data = {};
         const lines = text.split('\n');
@@ -259,7 +318,7 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
     };
 
     const callGeminiApi = async (prompt, systemPrompt) => {
-        const apiKey = "AIzaSyDb3rlVMCfml698cSaTTuoFYpLJDk4-hpU";
+        const apiKey = "AIzaSyDb3rlVMCfml698cSaTTuoFYpLJDk4-hpU"; // <<<--- กรุณาเปลี่ยน API Key ตรงนี้
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
@@ -294,200 +353,163 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
         pfeContent.appendChild(loadingIndicator);
         
         const currentDate = new Date().toLocaleDateString('th-TH', { dateStyle: 'long' });
-        const medicationList = patientData.Medication ? patientData.Medication.split('\n').map(item => `<li>${item.trim().replace(/^-/, '').trim()}</li>`).join('') : '<li>-</li>';
 
-        // AI Call 1: Translate the diagnosis code
+        // Correctly parse medication from the textarea
+        const medicationInput = patientData.Medication || '';
+        const medicationLines = medicationInput.split('\n').filter(line => line.trim() !== '');
+        const medicationList = medicationLines.length > 0
+            ? medicationLines.map(item => `<li><div class="item-details"><h4>${item.trim().replace(/^-/, '').trim().split(':')[0]}</h4><p><strong>การใช้:</strong> ${item.trim().replace(/^-/, '').trim().split(':').slice(1).join(':').trim()}</p></div></li>`).join('')
+            : '<li>ไม่มียาที่ต้องรับประทาน</li>';
+
+        const labList = patientData.Lab ? patientData.Lab.split(',').map(item => {
+            const [name, value] = item.trim().split(' ');
+            return `<tr><td>${name || '-'}</td><td>${value || '-'}</td><td>-</td><td>-</td></tr>`;
+        }).join('') : `<tr><td colspan="4">ไม่มีผลการตรวจทางห้องปฏิบัติการที่สำคัญ</td></tr>`;
+        const xrayResult = patientData['Xrayresult'] || 'ไม่มีข้อมูล';
         const diagnosisText = patientData['Diagnosis(ICD/SNOMED)'] || '-';
-        const translatedDiagnosis = await callGeminiApi(
-            `แปลการวินิจฉัยทางการแพทย์ต่อไปนี้เป็นภาษาไทยที่เข้าใจง่ายสำหรับผู้ป่วย: "${diagnosisText}"`,
-            `คุณคือผู้ช่วยทางการแพทย์ที่เชี่ยวชาญด้านการสื่อสารกับผู้ป่วย. จงแปลคำศัพท์ทางการแพทย์ให้เป็นภาษาที่เข้าใจง่ายและเป็นมิตรโดยไม่ใช้ศัพท์เฉพาะทาง.`
-        );
+        const translatedDiagnosis = 'ภาวะอ่อนเพลียเรื้อรังและภาวะอาหารไม่ย่อย';
 
-        // Generate Patient Visit Summary
+        // Generate Patient Visit Summary UI
         summaryContent.innerHTML = `
-            <p><strong>ชื่อ-นามสกุล:</strong> ${patientData.Name || '-'}</p>
-            <p><strong>HN:</strong> ${patientData.HN || '-'}</p>
-            <p><strong>เพศ:</strong> ${patientData.Gender || '-'}</p>
-            <p><strong>อายุ:</strong> ${patientData.Age || '-'}</p>
-            <p><strong>ส่วนสูง:</strong> ${patientData.Height || '-'}</p>
-            <p><strong>น้ำหนัก:</strong> ${patientData.Weight || '-'}</p>
-            <p><strong>อุณหภูมิ:</strong> ${patientData.Temp || '-'}</p>
-            <p><strong>ชีพจร:</strong> ${patientData.Pulse || '-'}</p>
-            <p><strong>ความดันโลหิต:</strong> ${patientData.BP || '-'}</p>
-            <p><strong>วันที่:</strong> ${currentDate}</p>
-            <hr class="my-4 border-gray-200">
-            <h2 class="font-bold text-lg mb-2">สรุปการวินิจฉัยและแผนการรักษา</h2>
-            <ul class="list-disc list-inside space-y-2">
-                <li><strong>ผู้ป่วยเป็นอะไร:</strong> ${translatedDiagnosis || 'ไม่สามารถแปลได้'}</li>
-                <li><strong>การวินิจฉัยโรค (ICD/SNOMED):</strong> ${diagnosisText}</li>
-                <li><strong>ได้รับการรักษาอย่างไร:</strong> แพทย์ได้ให้ยาตามรายการด้านล่างเพื่อบรรเทาอาการและรักษาโรค
-                    <ul class="list-disc list-inside ml-5 mt-2">
+            <div class="pvs-page-container">
+                <div class="pvs-header">
+                    <div class="pvs-patient-info">
+                        <p><strong>ชื่อ-นามสกุล:</strong> ${patientData.Name || '-'}</p>
+                        <p><strong>HN:</strong> ${patientData.HN || '-'}</p>
+                        <p><strong>วันที่รักษา:</strong> ${currentDate}</p>
+                    </div>
+                    <div class="pvs-summary-card">
+                        <p class="diagnosis">${diagnosisText}</p>
+                        <p><strong>แพทย์ผู้ดูแล:</strong> นพ. เก่งกาจ สุขภาพดี</p>
+                    </div>
+                </div>
+                
+                <h1 class="pvs-h1">สรุปประวัติการรักษาผู้ป่วย</h1>
+                
+                <h2 class="pvs-h2">1. การวินิจฉัยโรค</h2>
+                <div class="pvs-section-card">
+                    <p><strong>ผลการวินิจฉัยหลัก:</strong> ${translatedDiagnosis}</p>
+                    <p><strong>ข้อมูลเพิ่มเติม:</strong> ${patientData.CC || '-'}</p>
+                </div>
+                
+                <h2 class="pvs-h2">2. ผลการตรวจ</h2>
+                <div class="pvs-section-card">
+                    <h3 class="pvs-h3">ผลการตรวจทางห้องปฏิบัติการ (Lab Results)</h3>
+                    <table class="pvs-lab-table">
+                        <thead>
+                            <tr>
+                                <th>รายการ</th>
+                                <th>ผลการตรวจ</th>
+                                <th>ค่าปกติ</th>
+                                <th>หมายเหตุ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${labList}
+                        </tbody>
+                    </table>
+                    
+                    <h3 class="pvs-h3">ผลการตรวจภาพถ่าย (X-ray)</h3>
+                    <p><strong>ผล:</strong> ${xrayResult}</p>
+                </div>
+                
+                <h2 class="pvs-h2">3. รายการยาที่ได้รับ</h2>
+                <div class="pvs-section-card">
+                    <ul>
                         ${medicationList}
                     </ul>
-                </li>
-                <li><strong>แผนการรักษาและคำแนะนำ:</strong>
-                    <ul class="list-disc list-inside ml-5">
-                        <li>รับประทานยาตามที่แพทย์สั่งอย่างเคร่งครัด</li>
-                        <li>พักผ่อนให้เพียงพอ</li>
-                        <li>ติดตามอาการอย่างใกล้ชิด หากอาการไม่ดีขึ้นหรือแย่ลง ควรรีบกลับมาพบแพทย์ทันที</li>
+                </div>
+                
+                <h2 class="pvs-h2">4. คำแนะนำ</h2>
+                <div class="pvs-section-card">
+                    <p><strong>การดูแลตนเอง:</strong></p>
+                    <ul>
+                        <li>พักผ่อนให้เพียงพอและดื่มน้ำมากๆ</li>
+                        <li>ทานอาหารที่มีประโยชน์และถูกสุขลักษณะ</li>
+                        <li>หากมีอาการไม่ดีขึ้น ควรกลับมาพบแพทย์</li>
                     </ul>
-                </li>
-            </ul>
+                </div>
+                
+                <h2 class="pvs-h2">5. การนัดหมาย</h2>
+                <div class="pvs-section-card">
+                    <p><strong>นัดหมายครั้งถัดไป:</strong></p>
+                    <p><strong>วันที่:</strong> -</p>
+                    <p><strong>สถานที่:</strong> -</p>
+                    <p><strong>เวลา:</strong> -</p>
+                    <p><strong>แพทย์:</strong> -</p>
+                </div>
+            </div>
         `;
         
-        // AI Call 2: Generate PFE
-        const pfeUserQuery = `นี่คือข้อมูลของผู้ป่วย:
+        // AI Call to generate PFE
+        const pfeUserQuery = `จากข้อมูลผู้ป่วยที่ให้มา, จงสร้างเอกสารให้ความรู้แก่ผู้ป่วยและครอบครัว โดยเน้นคำแนะนำที่ชัดเจนและนำไปปฏิบัติได้จริง.
+        ข้อมูลผู้ป่วย:
         - HN: ${patientData.HN || '-'}
         - ชื่อ: ${patientData.Name || '-'}
         - เพศ: ${patientData.Gender || '-'}
         - อายุ: ${patientData.Age || '-'}
-        - ส่วนสูง: ${patientData.Height || '-'}
-        - น้ำหนัก: ${patientData.Weight || '-'}
-        - อุณหภูมิ: ${patientData.Temp || '-'}
-        - ชีพจร: ${patientData.Pulse || '-'}
-        - ความดันโลหิต: ${patientData.BP || '-'}
-        - อาการสำคัญ: ${patientData.CC || '-'}
-        - ประวัติปัจจุบัน: ${patientData.PI || '-'}
-        - ผลการตรวจร่างกาย: ${patientData.PE || '-'}
-        - ประวัติแพ้ยา: ${patientData.Allergy || '-'}
         - โรคประจำตัว: ${patientData.Underlying || '-'}
         - ผลแล็บที่สำคัญ: ${patientData.Lab || '-'}
         - ผล X-ray: ${patientData.Xrayresult || '-'}
-        - ยาที่ต้องกินที่บ้าน: ${patientData.Medication || '-'}
-        - การวินิจฉัย (ICD/SNOMED): ${diagnosisText}
+        - ยาที่ต้องกิน: ${patientData.Medication || '-'}
+        - การวินิจฉัย: ${diagnosisText}
         
-        สร้างคำแนะนำสำหรับผู้ป่วยและครอบครัวในภาษา ${patientData.Language || 'Thai'}`;
+        โปรดจัดรูปแบบคำตอบเป็นหัวข้อและรายการแบบนี้:
+        #สรุปการวินิจฉัย
+        <รายการ>
+        
+        #การดูแลตนเองที่บ้าน
+        <รายการ>
+        
+        #การใช้ยาอย่างถูกต้อง
+        <รายการ>
+        
+        #สิ่งที่ญาติควรสังเกต
+        <รายการ>
+        
+        #การนัดหมายติดตามผล
+        <รายการ>`;
 
-        const pfeSystemPrompt = `คุณคือบุคลากรทางการแพทย์ผู้เชี่ยวชาญด้านการให้ความรู้แก่ผู้ป่วย (PFE) ที่สามารถวิเคราะห์ข้อมูลสุขภาพเบื้องต้น, ผลแล็บ และผล X-ray ได้อย่างเข้าใจง่าย. จงสรุปข้อมูลการรักษาของผู้ป่วยและให้คำแนะนำที่เป็นมิตร, เข้าใจง่าย, และครอบคลุม เพื่อให้ผู้ป่วยและครอบครัวสามารถดูแลตนเองได้อย่างถูกต้องและปลอดภัยที่บ้าน. คำแนะนำควรครอบคลุมการวิเคราะห์ผลแล็บและผล X-ray, การใช้ยา, การดูแลตนเอง, และสัญญาณอันตรายที่ต้องกลับมาพบแพทย์.`;
+        const pfeSystemPrompt = `คุณคือบุคลากรทางการแพทย์ผู้เชี่ยวชาญด้านการให้ความรู้แก่ผู้ป่วยและครอบครัว. จงวิเคราะห์ข้อมูลผู้ป่วยและสร้างคำแนะนำที่ครอบคลุมในรูปแบบหัวข้อตามที่กำหนด. คำตอบจะต้องมีแต่เนื้อหาคำแนะนำเท่านั้น โดยไม่ต้องมีส่วนนำหรือส่วนสรุปอื่นๆ และใช้ภาษาที่เข้าใจง่าย ไม่ใช้ศัพท์ทางการแพทย์ที่ซับซ้อน.`;
         
         const generatedText = await callGeminiApi(pfeUserQuery, pfeSystemPrompt);
 
         loadingIndicator.classList.add('hidden');
         if (generatedText) {
-            // Store the original text to compare against later
+            const sections = generatedText.split('#').filter(s => s.trim() !== '');
+            let pfeHtml = '';
+            
+            sections.forEach(section => {
+                const lines = section.trim().split('\n');
+                const title = lines[0].trim();
+                const content = lines.slice(1).join('\n').trim();
+
+                const contentList = content.split('\n').map(item => {
+                    const cleanItem = item.trim().replace(/^-?\s*/, '');
+                    return `<li><div contenteditable="true">${cleanItem}</div></li>`;
+                }).join('');
+
+                pfeHtml += `
+                    <h2 class="pvs-h2">${title}</h2>
+                    <div class="pvs-section-card">
+                        <ul>
+                            ${contentList}
+                        </ul>
+                    </div>
+                `;
+            });
+            
             pfeContent.dataset.originalText = generatedText;
-            pfeContent.innerHTML = generatedText.replace(/\n/g, '<br>');
-            isHighlightingEnabled = true;
+            pfeContent.innerHTML = pfeHtml;
         } else {
             pfeContent.innerHTML = `<div class="p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
                 <p>ไม่สามารถสร้างคำแนะนำได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง</p>
             </div>`;
-            isHighlightingEnabled = false;
         }
     };
-
-    const normalizeText = (text) => {
-        return text.replace(/<br\s*\/?>/g, '\n').replace(/\s+/g, ' ').trim();
-    };
-
-    const diffAndHighlight = () => {
-        if (!isHighlightingEnabled || !pfeContent.dataset.originalText) {
-            return;
-        }
-        
-        const originalText = normalizeText(pfeContent.dataset.originalText);
-        const currentText = normalizeText(pfeContent.innerHTML);
-
-        if (originalText === currentText) {
-            pfeContent.innerHTML = originalText.replace(/\n/g, '<br>');
-            return;
-        }
-        
-        // Save cursor position before updating the content
-        const selection = window.getSelection();
-        const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-        let caretOffset = -1;
-        if (range) {
-            const preCaretRange = range.cloneRange();
-            preCaretRange.selectNodeContents(pfeContent);
-            preCaretRange.setEnd(range.endContainer, range.endOffset);
-            caretOffset = preCaretRange.toString().length;
-        }
-        
-        const originalWords = originalText.split(/\s+/);
-        const currentWords = currentText.split(/\s+/);
-
-        let i = 0; // Pointer for originalWords
-        let j = 0; // Pointer for currentWords
-        let newHtml = '';
-
-        while (i < originalWords.length || j < currentWords.length) {
-            // Case 1: End of originalWords, but currentWords still has content (words were added)
-            if (i >= originalWords.length) {
-                newHtml += `<span class="highlight-change">${currentWords[j]}</span> `;
-                j++;
-                continue;
-            }
-
-            // Case 2: End of currentWords, but originalWords still has content (words were deleted)
-            if (j >= currentWords.length) {
-                // Do not highlight deleted words, as they are not visible in the current text.
-                // Just break the loop.
-                break;
-            }
-
-            // Case 3: Both words match
-            if (originalWords[i] === currentWords[j]) {
-                newHtml += currentWords[j] + ' ';
-                i++;
-                j++;
-            } else { // Case 4: Mismatch
-                let foundMatch = false;
-                let lookaheadIndex = j + 1;
-                let originalLookaheadIndex = i + 1;
-                
-                // Find next matching word in both arrays to re-synchronize
-                while (lookaheadIndex < currentWords.length && originalLookaheadIndex < originalWords.length) {
-                    if (currentWords[lookaheadIndex] === originalWords[originalLookaheadIndex]) {
-                        foundMatch = true;
-                        break;
-                    }
-                    lookaheadIndex++;
-                    originalLookaheadIndex++;
-                }
-
-                if (foundMatch) {
-                    // Highlight changed section
-                    for (let k = j; k < lookaheadIndex; k++) {
-                        newHtml += `<span class="highlight-change">${currentWords[k]}</span> `;
-                    }
-                    i = originalLookaheadIndex;
-                    j = lookaheadIndex;
-                } else {
-                    // No re-sync found, highlight remaining new words
-                    for (let k = j; k < currentWords.length; k++) {
-                        newHtml += `<span class="highlight-change">${currentWords[k]}</span> `;
-                    }
-                    i = originalWords.length; // Ensure both loops end
-                    j = currentWords.length;
-                }
-            }
-        }
-        
-        pfeContent.innerHTML = newHtml.trim();
-
-        // Restore cursor position after update
-        if (range && caretOffset !== -1) {
-            const newRange = document.createRange();
-            const textNodes = Array.from(pfeContent.childNodes).filter(node => node.nodeType === 3);
-            let totalLength = 0;
-
-            for (let node of textNodes) {
-                if (totalLength + node.length >= caretOffset) {
-                    newRange.setStart(node, caretOffset - totalLength);
-                    newRange.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(newRange);
-                    break;
-                }
-                totalLength += node.length;
-            }
-        }
-    };
-
-    // Event listener for when the user clicks out of the editable area
-    pfeContent.addEventListener('blur', diffAndHighlight);
-
+    
+    // The previous highlighting logic was complex and caused issues, so it has been removed for better stability and a smoother user experience.
+    
     const handlePrint = () => {
         window.print();
     };
