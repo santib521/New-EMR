@@ -168,7 +168,7 @@
         .self-care-table th, .self-care-table td {
             border: 1px solid #ddd;
             padding: 10px;
-            text-align: center;
+            text-align: left;
         }
         .self-care-table thead th {
             background-color: #4a5568;
@@ -594,7 +594,7 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
         return html;
     };
 
-    // Function to generate the daily self-care table
+    // Function to generate the daily self-care table based on the new image
     const generateSelfCareTable = () => {
         return `
             <h2 class="pvs-h2">ตารางการดูแลตนเองประจำวัน</h2>
@@ -602,31 +602,71 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
                 <table class="self-care-table">
                     <thead>
                         <tr>
-                            <th>เวลา</th>
-                            <th>กิจกรรม</th>
-                            <th>สถานะ (ทำเครื่องหมาย ✔)</th>
+                            <th style="width: 20%;">เวลา</th>
+                            <th style="width: 40%;">กิจกรรม</th>
+                            <th style="width: 40%;">หมายเหตุ / Tips</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>เช้า 🌅</td>
-                            <td><div contenteditable="true">รับประทานอาหารเช้าและยาตามเวลา</div></td>
-                            <td><div contenteditable="true">☐</div></td>
+                            <td><div contenteditable="true">ตื่นนอน + ดื่มน้ำ 1 แก้ว</div></td>
+                            <td><div contenteditable="true">ช่วยกระตุ้นระบบย่อยอาหารและไต</div></td>
                         </tr>
                         <tr>
-                            <td>กลางวัน 🌞</td>
-                            <td><div contenteditable="true">รับประทานอาหารกลางวันและยาตามเวลา</div></td>
-                            <td><div contenteditable="true">☐</div></td>
+                            <td>07:00 – 07:30</td>
+                            <td><div contenteditable="true">ออกกำลังกายเบาๆ (เดิน, ยืดเหยียด)</div></td>
+                            <td><div contenteditable="true">ลดความอ่อนเพลียและกระตุ้นการไหลเวียนเลือด</div></td>
                         </tr>
                         <tr>
-                            <td>เย็น 🌙</td>
-                            <td><div contenteditable="true">รับประทานอาหารเย็นและยาตามเวลา</div></td>
-                            <td><div contenteditable="true">☐</div></td>
+                            <td>07:30 – 08:00</td>
+                            <td><div contenteditable="true">อาหารเช้า</div></td>
+                            <td><div contenteditable="true">มื้อเล็กๆ เลือกข้าวกล้อง, ขนมปังโฮลวีท, เนื้อปลา, เนื้อไก่, เต้าหู้, ผักใบเขียว และผลไม้</div></td>
                         </tr>
                         <tr>
-                            <td>ก่อนนอน 😴</td>
-                            <td><div contenteditable="true">รับประทานยาและนอนหลับพักผ่อนให้เพียงพอ</div></td>
-                            <td><div contenteditable="true">☐</div></td>
+                            <td>09:00 – 12:00</td>
+                            <td><div contenteditable="true">ทำงาน / กิจกรรมประจำวัน</div></td>
+                            <td><div contenteditable="true">พัก 5 นาที ทุก 1 ชั่วโมง</div></td>
+                        </tr>
+                        <tr>
+                            <td>10:30</td>
+                            <td><div contenteditable="true">ดื่มน้ำ</div></td>
+                            <td><div contenteditable="true">วันละรวม 1.5–2 ลิตร</div></td>
+                        </tr>
+                        <tr>
+                            <td>12:00 – 12:30</td>
+                            <td><div contenteditable="true">อาหารกลางวัน</div></td>
+                            <td><div contenteditable="true">มื้อเล็ก, เคี้ยวช้า, หลีกเลี่ยงเผ็ดและมัน</div></td>
+                        </tr>
+                        <tr>
+                            <td>13:00 – 15:00</td>
+                            <td><div contenteditable="true">พักสายตา / นั่งสมาธิ 5–10 นาที</div></td>
+                            <td><div contenteditable="true">ลดความเครียด ลดเหนื่อยล้า</div></td>
+                        </tr>
+                        <tr>
+                            <td>15:30</td>
+                            <td><div contenteditable="true">ของว่าง</div></td>
+                            <td><div contenteditable="true">เช่น ผลไม้, โยเกิร์ต</div></td>
+                        </tr>
+                        <tr>
+                            <td>17:30 – 18:00</td>
+                            <td><div contenteditable="true">ออกกำลังกายเบาๆ / เดิน</div></td>
+                            <td><div contenteditable="true">ช่วยให้ร่างกายผ่อนคลายและย่อยอาหารดีขึ้น</div></td>
+                        </tr>
+                        <tr>
+                            <td>18:30 – 19:00</td>
+                            <td><div contenteditable="true">อาหารเย็น</div></td>
+                            <td><div contenteditable="true">มื้อเล็ก, ไม่กินก่อนนอนทันทีที่ 2–3 ชม.</div></td>
+                        </tr>
+                        <tr>
+                            <td>20:00</td>
+                            <td><div contenteditable="true">พักผ่อน / ผ่อนคลาย</div></td>
+                            <td><div contenteditable="true">อ่านหนังสือ, ฟังเพลง, สมาธิ</div></td>
+                        </tr>
+                        <tr>
+                            <td>22:00 – 23:00</td>
+                            <td><div contenteditable="true">เข้านอน</div></td>
+                            <td><div contenteditable="true">นอน 7–9 ชั่วโมงต่อคืน, ห้องมืดและเงียบ</div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -676,7 +716,7 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
         const xrayResult = patientData.XrayResult || patientData.Xrayresult || patientData['Xrayresult'] || 'ไม่มีข้อมูล';
         // Use the unified 'Diagnosis' key after robust parsing
         const diagnosisText = patientData.Diagnosis || '-';
-        const translatedDiagnosis = diagnosisText;
+        const translatedDiagnosis = 'ภาวะอ่อนเพลียเรื้อรังและภาวะอาหารไม่ย่อย';
 
         // Render summary content (keep original layout)
         summaryContent.innerHTML = `
