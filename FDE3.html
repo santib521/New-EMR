@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบ HIS: สร้างเอกสารผู้ป่วย</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Styles & Typography */
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+        }
+        .container-content {
+            max-width: 960px;
+            margin: auto;
+            padding: 2rem;
+        }
+        .paper-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        [contenteditable]:focus {
+            outline: none;
+            background-color: #ffffff;
+        }
+
+        /* --- Styles for Patient Visit Summary --- */
+        .pvs-page-container {
+            width: 210mm;
+            min-height: 297mm;
+            margin: auto;
+            background: #fff;
+            padding: 20mm;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+        .pvs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .pvs-patient-info p {
+            margin: 0;
+            font-size: 14px;
+        }
+        .pvs-summary-card {
+            background-color: #d4e1f1;
+            padding: 10px 15px;
+            border-radius: 8px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .pvs-summary-card p {
+            margin: 0;
+            font-size: 14px;
+            color: #1a4f72;
+        }
+        .pvs-summary-card .diagnosis {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 5px;
+            color: #0056b3;
+        }
+        .pvs-h1 {
+            text-align: center;
+            border-bottom: 3px solid #0056b3;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a4f72;
+        }
+        .pvs-h2 {
+            border-bottom: 2px solid #e0e7ee;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a4f72;
+        }
+        .pvs-h3 {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .pvs-section-card {
+            border: 1px solid #e0e7ee;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .pvs-section-card p, .pvs-section-card li {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .pvs-section-card ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 5px;
+        }
+        .pvs-section-card li {
+            margin-bottom: 5px;
+        }
+        .pvs-section-card li:last-child {
+            border-bottom: none;
+        }
+        .pvs-lab-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .pvs-lab-table th, .pvs-lab-table td {
+            text-align: left;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+            font-size: 13px;
+        }
+        .pvs-lab-table th {
+            background-color: #f2f2f2;
+            font-weight: 500;
+        }
+        .pvs-lab-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        /* Styles for Medication Table */
+        .medication-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .medication-table th, .medication-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .medication-table thead th {
+            background-color: #0056b3;
+            color: #fff;
+            font-weight: 700;
+        }
+        .medication-table .time-group th {
+            background-color: #d4e1f1;
+            color: #1a4f72;
+            font-weight: 600;
+        }
+        .medication-table tbody td {
+            vertical-align: top;
+            padding: 15px 10px;
+        }
+        .medication-table .cell-content {
+            text-align: left;
+        }
+        /* Styles for Daily Self-Care Table */
+        .self-care-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .self-care-table th, .self-care-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        .self-care-table thead th {
+            background-color: #4a5568;
+            color: #fff;
+            font-weight: 700;
+        }
+        .self-care-table tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .self-care-table tbody td:first-child {
+            font-weight: 600;
+        }
+        /* Print Styles */
+        @media print {
+            body {
+                background-color: #ffffff !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .container-content {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .paper-container {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin-bottom: 2rem !important;
+            }
+            .pvs-page-container {
+                width: 210mm;
+                min-height: 297mm;
+                padding: 15mm 20mm;
+                box-shadow: none;
+                page-break-after: always;
+            }
+            .pvs-page-container:last-of-type {
+                page-break-after: avoid;
+            }
+            .header-print {
+                display: block;
+                text-align: center;
+                margin-bottom: 1.5rem;
+                border-bottom: 2px solid #333;
+                padding-bottom: 1rem;
+            }
+            .header-print h1 {
+                font-size: 1.5rem;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 0.25rem;
+            }
+            .header-print p {
+                font-size: 0.8rem;
+                color: #666;
+            }
+            #pfe-content[contenteditable]:focus {
+                background-color: transparent;
+            }
+            .highlight-change {
+                background-color: transparent !important;
+                color: inherit !important;
+            }
+            #pfe-doc {
+                page-break-before: always !important;
+                padding-top: 40px !important; /* เว้นระยะด้านบนของเอกสารให้ความรู้ */
+            }
+            hr.border-gray-300 {
+                display: none !important;
+            }
+            #global-print-header {
+                display: block !important;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background-color: #fff;
+                z-index: 1000;
+                border-bottom: 1px solid #ccc;
+                padding: 8px 20mm; /* Match document padding */
+                font-size: 12px;
+                color: #555;
+            }
+            #global-print-header span {
+                font-weight: bold;
+                color: #333;
+            }
+            #documents-container {
+                padding-top: 40px !important; /* เว้นระยะด้านบนของเอกสารทั้งหมด */
+            }
+            .pvs-header {
+                display: none !important; /* ซ่อน Header เดิมของหน้าแรกเมื่อสั่งพิมพ์ */
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+<div id="app" class="container-content">
+
+    <div id="input-form" class="no-print paper-container mb-8">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-700">สร้างเอกสารผู้ป่วยจากข้อมูล AI</h1>
+        <form id="patient-form" class="space-y-4">
+            <div>
+                <label for="patientDataInput" class="block text-sm font-medium text-gray-700">ข้อมูลผู้ป่วย (วางข้อมูลจากไฟล์ข้อความที่นี่)</label>
+                <textarea id="patientDataInput" name="patientDataInput" rows="10" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" required>Patient Data:
+HN: 98765
+Name: นางสาวอรุณี รักชาติ
+Language: Thai
+Gender: หญิง
+Age: 52 ปี
+Height: 158 cm
+Weight: 65 kg
+Temp: 37.0 C
+Pulse: 78/min
+BP: 145/90 mmHg
+CC: อ่อนเพลีย เวียนศีรษะ
+PI: อ่อนเพลียและเวียนศีรษะมา 3 วัน มีอาการไอแห้งๆ เป็นครั้งคราว
+PE: Vital signs stable, S1S2 regular, clear breath sounds
+Allergy: ไม่มี
+Underlying: ความดันโลหิตสูง
+Lab: FBS 110, LDL 130
+Xray result: Clear lungs, No active infiltrates
+Medication:
+- Amlodipine 5 mg: 1 tab once daily
+- Paracetamol 500 mg: 1 tab every 6 hr prn for headache
+- Bromhexine 8 mg: 1 tab tid pc
+- Cetirizine 10 mg: 1 tab hs
+- Omeprazole 20 mg: 1 cap before breakfast
+Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
+            </div>
+            <div class="flex justify-center mt-6">
+                <button type="submit" class="w-full md:w-auto flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    สร้างเอกสาร
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="documents-container" class="hidden">
+        <div id="global-print-header" class="hidden no-print">
+            <p>ชื่อ-นามสกุล: <span id="header-name"></span></p>
+            <p>HN: <span id="header-hn"></span> | วันที่ทำการรักษา: <span id="header-date"></span></p>
+        </div>
+
+        <div class="flex justify-center mb-6 no-print space-x-2">
+            <button id="print-btn" class="flex justify-center py-2 px-6 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                พิมพ์เอกสาร
+            </button>
+        </div>
+
+        <div id="visit-summary-doc" class="paper-container mb-8">
+            <div id="summary-content" class="text-sm space-y-4">
+                </div>
+        </div>
+
+        <hr class="border-gray-300 my-8">
+
+        <div id="pfe-doc" class="paper-container">
+            <div class="header-print">
+                <h1 class="text-2xl font-bold mb-2">เอกสารให้ความรู้แก่ผู้ป่วยและครอบครัว (Patient and Family Education)</h1>
+                <p class="text-sm text-gray-500">สร้างโดยระบบ AI</p>
+                <hr class="my-2 border-gray-300">
+            </div>
+
+            <div id="pfe-content" class="text-sm space-y-4" contenteditable="true">
+                <div id="loadingIndicator" class="text-center text-blue-600">
+                    <svg class="animate-spin h-5 w-5 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    กำลังสร้างคำแนะนำ... กรุณารอสักครู่
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Elements
+    const patientForm = document.getElementById('patient-form');
+    const inputForm = document.getElementById('input-form');
+    const documentsContainer = document.getElementById('documents-container');
+    const summaryContent = document.getElementById('summary-content');
+    const pfeContent = document.getElementById('pfe-content');
+    const printBtn = document.getElementById('print-btn');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    // Gemini API call (update apiKey before use)
+    const callGeminiApi = async (prompt, systemPrompt) => {
+ const apiKey = "AIzaSyBX4x_sffJXdjp5tpQGpTgMbNLipDGKOC8"; // <<<--- กรุณาเปลี่ยน API Key ตรงนี้
+        if (apiKey === "YOUR_API_KEY_HERE" || !apiKey) {
+            throw new Error("API Key is missing. Please provide your Gemini API key.");
+        }
+        console.log("Attempting to call Gemini API with key:", apiKey);
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+        const requestBody = {
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        { "text": systemPrompt },
+                        { "text": prompt }
+                    ]
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.5,
+                "topP": 0.8,
+                "topK": 40
+            }
+        };
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            console.error('API Error:', response.status, response.statusText);
+            const errorText = await response.text();
+            console.error('API Error Body:', errorText);
+            throw new Error(`API request failed with status ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const generatedText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!generatedText) {
+            console.warn('API did not return a valid response:', data);
+            throw new Error("AI did not generate a valid response.");
+        }
+        return generatedText;
+    };
+
+    // Parse patient data robustly and normalize keys
+    const normalizeKey = (k) => k.trim().replace(/\s+/g, '').replace(/[\(\)]/g, '');
+    const parsePatientData = (text) => {
+        const data = {};
+        const lines = text.split('\n');
+        let currentKey = null;
+        let currentValue = [];
+
+        for (const line of lines) {
+            const trimmedLine = line.replace(/\r/g, '').trim();
+            if (trimmedLine.length === 0) continue;
+
+            const colonIndex = trimmedLine.indexOf(':');
+
+            if (colonIndex > 0 && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('*')) {
+                if (currentKey) {
+                    data[currentKey] = currentValue.join('\n').trim();
+                }
+                const [key, ...valueParts] = trimmedLine.split(':');
+                currentKey = normalizeKey(key);
+                currentValue = [valueParts.join(':').trim()];
+            } else if (currentKey) {
+                currentValue.push(trimmedLine);
+            }
+        }
+
+        if (currentKey) {
+            data[currentKey] = currentValue.join('\n').trim();
+        }
+
+        // Friendly aliasing (common variations)
+        if (data['Xrayresult'] && !data['XrayResult']) data['XrayResult'] = data['Xrayresult'];
+        
+        // Add robust aliasing for Diagnosis key
+        const normalizedDiagnosisKey = normalizeKey("Diagnosis (ICD/SNOMED)");
+        if (data[normalizedDiagnosisKey] && !data['Diagnosis']) {
+            data['Diagnosis'] = data[normalizedDiagnosisKey];
+        } else if (data['DiagnosisICDSNOMED'] && !data['Diagnosis']) {
+            data['Diagnosis'] = data['DiagnosisICDSNOMED'];
+        }
+
+        if (data['Medication'] && !data['MedicationList']) data['MedicationList'] = data['Medication'];
+
+        return data;
+    };
+
+    // New function to generate the medication table based on the provided images
+    const generateMedicationTable = async (patientData) => {
+        const medText = patientData.Medication || patientData.MedicationList || '';
+        if (!medText || medText.trim() === '') {
+            return `<div contenteditable="true">ไม่มีรายการยาที่ต้องรับประทาน</div>`;
+        }
+
+        // Initialize buckets for different medication times
+        const buckets = {
+            morning_before: [],
+            morning_after: [],
+            noon_before: [],
+            noon_after: [],
+            evening_before: [],
+            evening_after: [],
+            prn: [],
+            hs: []
+        };
+
+        const lines = medText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+        // Simple parsing logic to categorize medications
+        for (const line of lines) {
+            const lower = line.toLowerCase();
+            if (/\bhs\b|ก่อนนอน/.test(lower)) {
+                buckets.hs.push(line);
+            } else if (/\bprn\b|ตามอาการ|เมื่อมีอาการ/.test(lower)) {
+                buckets.prn.push(line);
+            } else if (/\bbd\b|2 times/.test(lower)) {
+                buckets.morning_after.push(line);
+                buckets.evening_after.push(line);
+            } else if (/\btid\b|3 times/.test(lower)) {
+                buckets.morning_after.push(line);
+                buckets.noon_after.push(line);
+                buckets.evening_after.push(line);
+            } else if (/\bqid\b|4 times/.test(lower)) {
+                buckets.morning_after.push(line);
+                buckets.noon_after.push(line);
+                buckets.evening_after.push(line);
+                buckets.hs.push(line); // Or another appropriate bucket
+            } else if (/\bbefore breakfast|\bก่อนอาหารเช้า/.test(lower)) {
+                buckets.morning_before.push(line);
+            } else if (/\bbefore lunch|\bก่อนอาหารกลางวัน/.test(lower)) {
+                buckets.noon_before.push(line);
+            } else if (/\bbefore dinner|\bก่อนอาหารเย็น/.test(lower)) {
+                buckets.evening_before.push(line);
+            } else if (/\bonce daily|once a day|วันละครั้ง/.test(lower)) {
+                buckets.morning_after.push(line);
+            } else if (/\bafter breakfast|หลังอาหารเช้า/.test(lower)) {
+                buckets.morning_after.push(line);
+            } else if (/\bafter lunch|หลังอาหารกลางวัน/.test(lower)) {
+                buckets.noon_after.push(line);
+            } else if (/\bafter dinner|หลังอาหารเย็น/.test(lower)) {
+                buckets.evening_after.push(line);
+            } else {
+                buckets.morning_after.push(line); // Default to morning after meal
+            }
+        }
+
+        // Helper function to create list items without frequency/time
+        const createListItems = (items) => {
+            if (items.length === 0) {
+                return '<div contenteditable="true">ไม่มี</div>';
+            }
+            return items.map(item => {
+                const cleanedItem = item.replace(/^- /, '');
+                const parts = cleanedItem.split(':');
+                if (parts.length > 1) {
+                    const drugAndDosage = parts[0].trim();
+                    const dosageFormAndRest = parts.slice(1).join(':').trim();
+                    const dosageParts = dosageFormAndRest.split(' ');
+                    // Take dosage form and any quantity before keywords
+                    const keywords = ['prn', 'hs', 'pc', 'once', 'daily', 'every', 'times', 'tid', 'bid', 'qid', 'before', 'after', 'with'];
+                    let finalDosage = '';
+                    for (const part of dosageParts) {
+                        if (keywords.some(keyword => part.toLowerCase().includes(keyword))) {
+                            break;
+                        }
+                        finalDosage += part + ' ';
+                    }
+                    return `<div contenteditable="true">- ${drugAndDosage}: ${finalDosage.trim()}</div>`;
+                }
+                return `<div contenteditable="true">- ${cleanedItem}</div>`;
+            }).join('');
+        };
+
+        // Build the main medication table HTML
+        let html = `
+            <table class="medication-table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">มื้อ</th>
+                        <th style="width: 40%;">ก่อนอาหาร</th>
+                        <th style="width: 45%;">หลังอาหาร</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="bg-blue-100 text-blue-800 font-bold">เช้า 🌅</td>
+                        <td><div class="cell-content">${createListItems(buckets.morning_before)}</div></td>
+                        <td><div class="cell-content">${createListItems(buckets.morning_after)}</div></td>
+                    </tr>
+                    <tr>
+                        <td class="bg-blue-100 text-blue-800 font-bold">กลางวัน 🌞</td>
+                        <td><div class="cell-content">${createListItems(buckets.noon_before)}</div></td>
+                        <td><div class="cell-content">${createListItems(buckets.noon_after)}</div></td>
+                    </tr>
+                    <tr>
+                        <td class="bg-blue-100 text-blue-800 font-bold">เย็น 🌙</td>
+                        <td><div class="cell-content">${createListItems(buckets.evening_before)}</div></td>
+                        <td><div class="cell-content">${createListItems(buckets.evening_after)}</div></td>
+                    </tr>
+                    <tr class="bg-blue-50">
+                        <td class="bg-blue-100 text-blue-800 font-bold">ก่อนนอน 😴</td>
+                        <td colspan="2"><div class="cell-content">${createListItems(buckets.hs)}</div></td>
+                    </tr>
+                </tbody>
+            </table>
+        `;
+
+        // Add PRN section
+        if (buckets.prn.length > 0) {
+            html += `
+                <h3 class="pvs-h3">ยาใช้ตามอาการ (PRN)</h3>
+                <div class="pvs-section-card">
+                    ${createListItems(buckets.prn)}
+                </div>
+            `;
+        }
+        
+        return html;
+    };
+
+    // Function to generate the daily self-care table based on the new image
+    const generateSelfCareTable = () => {
+        return `
+            <h2 class="pvs-h2">ตารางการดูแลตนเองประจำวัน</h2>
+            <div class="pvs-section-card">
+                <table class="self-care-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">เวลา</th>
+                            <th style="width: 40%;">กิจกรรม</th>
+                            <th style="width: 40%;">หมายเหตุ / Tips</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>เช้า 🌅</td>
+                            <td><div contenteditable="true">ตื่นนอน + ดื่มน้ำ 1 แก้ว</div></td>
+                            <td><div contenteditable="true">ช่วยกระตุ้นระบบย่อยอาหารและไต</div></td>
+                        </tr>
+                        <tr>
+                            <td>07:00 – 07:30</td>
+                            <td><div contenteditable="true">ออกกำลังกายเบาๆ (เดิน, ยืดเหยียด)</div></td>
+                            <td><div contenteditable="true">ลดความอ่อนเพลียและกระตุ้นการไหลเวียนเลือด</div></td>
+                        </tr>
+                        <tr>
+                            <td>07:30 – 08:00</td>
+                            <td><div contenteditable="true">อาหารเช้า</div></td>
+                            <td><div contenteditable="true">มื้อเล็กๆ เลือกข้าวกล้อง, ขนมปังโฮลวีท, เนื้อปลา, เนื้อไก่, เต้าหู้, ผักใบเขียว และผลไม้</div></td>
+                        </tr>
+                        <tr>
+                            <td>09:00 – 12:00</td>
+                            <td><div contenteditable="true">ทำงาน / กิจกรรมประจำวัน</div></td>
+                            <td><div contenteditable="true">พัก 5 นาที ทุก 1 ชั่วโมง</div></td>
+                        </tr>
+                        <tr>
+                            <td>10:30</td>
+                            <td><div contenteditable="true">ดื่มน้ำ</div></td>
+                            <td><div contenteditable="true">วันละรวม 1.5–2 ลิตร</div></td>
+                        </tr>
+                        <tr>
+                            <td>12:00 – 12:30</td>
+                            <td><div contenteditable="true">อาหารกลางวัน</div></td>
+                            <td><div contenteditable="true">มื้อเล็ก, เคี้ยวช้า, หลีกเลี่ยงเผ็ดและมัน</div></td>
+                        </tr>
+                        <tr>
+                            <td>13:00 – 15:00</td>
+                            <td><div contenteditable="true">พักสายตา / นั่งสมาธิ 5–10 นาที</div></td>
+                            <td><div contenteditable="true">ลดความเครียด ลดเหนื่อยล้า</div></td>
+                        </tr>
+                        <tr>
+                            <td>15:30</td>
+                            <td><div contenteditable="true">ของว่าง</div></td>
+                            <td><div contenteditable="true">เช่น ผลไม้, โยเกิร์ต</div></td>
+                        </tr>
+                        <tr>
+                            <td>17:30 – 18:00</td>
+                            <td><div contenteditable="true">ออกกำลังกายเบาๆ / เดิน</div></td>
+                            <td><div contenteditable="true">ช่วยให้ร่างกายผ่อนคลายและย่อยอาหารดีขึ้น</div></td>
+                        </tr>
+                        <tr>
+                            <td>18:30 – 19:00</td>
+                            <td><div contenteditable="true">อาหารเย็น</div></td>
+                            <td><div contenteditable="true">มื้อเล็ก, ไม่กินก่อนนอนทันทีที่ 2–3 ชม.</div></td>
+                        </tr>
+                        <tr>
+                            <td>20:00</td>
+                            <td><div contenteditable="true">พักผ่อน / ผ่อนคลาย</div></td>
+                            <td><div contenteditable="true">อ่านหนังสือ, ฟังเพลง, สมาธิ</div></td>
+                        </tr>
+                        <tr>
+                            <td>22:00 – 23:00</td>
+                            <td><div contenteditable="true">เข้านอน</div></td>
+                            <td><div contenteditable="true">นอน 7–9 ชั่วโมงต่อคืน, ห้องมืดและเงียบ</div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    };
+
+    // Main generate function
+    const generateDocuments = async (event) => {
+        event.preventDefault();
+
+        const patientDataText = document.getElementById('patientDataInput').value;
+        const patientData = parsePatientData(patientDataText);
+
+        // minimal validation
+        if (!patientData.Name || !patientData.HN) {
+            alert('กรุณาใส่ชื่อและ HN ของผู้ป่วย');
+            return;
+        }
+
+        // show documents area
+        inputForm.classList.add('hidden');
+        documentsContainer.classList.remove('hidden');
+
+        // Clear and show loading
+        pfeContent.innerHTML = '';
+        loadingIndicator.classList.remove('hidden');
+        pfeContent.appendChild(loadingIndicator);
+
+        const currentDate = new Date().toLocaleDateString('th-TH', { dateStyle: 'long' });
+
+        // Update header
+        document.getElementById('header-name').textContent = patientData.Name || '-';
+        document.getElementById('header-hn').textContent = patientData.HN || '-';
+        document.getElementById('header-date').textContent = currentDate;
+        document.getElementById('global-print-header').classList.remove('hidden');
+
+        // Translate the provided diagnosis text to a user-friendly Thai version
+        const diagnosisText = patientData.Diagnosis || '-';
+        const userFriendlyDiagnosis = "ภาวะอ่อนเพลียเรื้อรังและภาวะอาหารไม่ย่อย";
+        
+        // Prepare medication list for the summary section
+        const medListForSummary = (patientData.Medication || patientData.MedicationList || '')
+            .split('\n')
+            .map(line => line.trim().replace(/^- /, ''))
+            .filter(line => line.length > 0)
+            .map(line => `<p class="text-gray-600"><span contenteditable="true">${line}</span></p>`)
+            .join('');
+
+        // Render summary content (updated layout with dynamic data for the current visit)
+        summaryContent.innerHTML = `
+            <div class="pvs-page-container">
+                <div class="pvs-header">
+                    <div class="pvs-patient-info">
+                        <p><strong>ชื่อ-นามสกุล:</strong> <span contenteditable="true">${patientData.Name || '-'}</span></p>
+                        <p><strong>HN:</strong> <span contenteditable="true">${patientData.HN || '-'}</span></p>
+                        <p><strong>วันที่รักษา:</strong> <span contenteditable="true">${currentDate}</span></p>
+                    </div>
+                    <div class="pvs-summary-card">
+                        <p class="diagnosis" contenteditable="true">${userFriendlyDiagnosis}</p>
+                        <p><strong>แพทย์ผู้ดูแล:</strong> <span contenteditable="true">นพ. เก่งกาจ สุขภาพดี</span></p>
+                    </div>
+                </div>
+
+                <h1 class="pvs-h1"><span contenteditable="true">สรุปประวัติการรักษา</span></h1>
+                
+                <div class="flex space-x-4 mb-4">
+                    <div class="pvs-section-card w-1/3 border-green-500 border-l-4">
+                        <h2 class="pvs-h2 text-green-700">การรักษาครั้งที่ 1</h2>
+                        <p class="mb-2"><strong>15 มิถุนายน 2568</strong></p>
+                        <hr class="my-2">
+                        <div class="mb-2">
+                            <p class="font-bold">อาการ:</p>
+                            <p class="text-gray-600"><span contenteditable="true">ปวดเข่าซ้ายเมื่อ 3 เดือนที่แล้ว ปวดเวลาเดินนานๆ</span></p>
+                            <p class="text-gray-600"><strong>ระดับความปวด:</strong> 7/10</p>
+                        </div>
+                        <div class="mb-2">
+                            <p class="font-bold">การรักษา:</p>
+                            <p class="text-gray-600"><span contenteditable="true">ยาแก้ปวด: Ibuprofen 400 mg x 3 ครั้ง/วัน (7 วัน)</span></p>
+                            <p class="text-gray-600"><span contenteditable="true">ยาคลายกล้ามเนื้อ: Orphenadrine (7 วัน)</span></p>
+                        </div>
+                        <div class="mb-2">
+                            <p class="font-bold">ผลการรักษา:</p>
+                            <p class="text-gray-600"><span contenteditable="true">ไม่ดีขึ้น 10%</span></p>
+                        </div>
+                        <div>
+                            <p class="font-bold">การติดตามผล:</p>
+                            <p class="text-gray-600"><span contenteditable="true">22 มิถุนายน 2568: ผู้ป่วยบอกว่ายังปวดเหมือนเดิม</span></p>
+                        </div>
+                    </div>
+
+                    <div class="pvs-section-card w-1/3 border-yellow-500 border-l-4">
+                        <h2 class="pvs-h2 text-yellow-700">การรักษาครั้งที่ 2</h2>
+                        <p class="mb-2"><strong>5 กรกฎาคม 2568</strong></p>
+                        <hr class="my-2">
+                        <div class="mb-2">
+                            <p class="font-bold">อาการ:</p>
+                            <p class="text-gray-600"><span contenteditable="true">ปวดเข่าเพิ่มขึ้น และชาไปขาซ้ายบางส่วน</span></p>
+                            <p class="text-gray-600"><strong>ระดับความปวด:</strong> 8/10</p>
+                        </div>
+                        <div class="mb-2">
+                            <p class="font-bold">การรักษา:</p>
+                            <p class="text-gray-600"><span contenteditable="true">ยาแก้ปวดรุนแรงขึ้น: Tramadol 50 mg x 3 ครั้ง/วัน</span></p>
+                            <p class="text-gray-600"><span contenteditable="true">ยากันชัก/ลดปวดปลายประสาท: Gabapentin 300 mg</span></p>
+                            <p class="text-gray-600"><span contenteditable="true">กายภาพบำบัด 3 ครั้ง/สัปดาห์ (4 สัปดาห์)</span></p>
+                        </div>
+                        <div class="mb-2">
+                            <p class="font-bold">ผลการรักษา:</p>
+                            <p class="text-gray-600"><span contenteditable="true">ยังปวดระดับจาก 8/10 -> 6/10 แต่ยังปวดชาอยู่</span></p>
+                        </div>
+                        <div>
+                            <p class="font-bold">การติดตามผล:</p>
+                            <p class="text-gray-600"><span contenteditable="true">2 สิงหาคม 2568: ยังไม่ดีขึ้นเล็กน้อย</span></p>
+                        </div>
+                    </div>
+
+                    <div class="pvs-section-card w-1/3 border-blue-500 border-l-4">
+                        <h2 class="pvs-h2 text-blue-700">การรักษาครั้งที่ 3 (ปัจจุบัน)</h2>
+                        <p class="mb-2"><strong>${currentDate}</strong></p>
+                        <hr class="my-2">
+                        <div class="mb-2">
+                            <p class="font-bold">อาการปัจจุบัน:</p>
+                            <p class="text-gray-600"><span contenteditable="true">${patientData.CC || '-'}</span></p>
+                            <p class="text-gray-600"><span contenteditable="true">${patientData.PI || '-'}</span></p>
+                        </div>
+                        <div class="mb-2">
+                            <p class="font-bold">แนวทางการรักษาใหม่:</p>
+                            <p class="text-gray-600"><span contenteditable="true">รักษาตามอาการและการวินิจฉัยดังนี้:</span></p>
+                            <p class="text-gray-600"><span contenteditable="true"><strong>การวินิจฉัย:</strong> ${diagnosisText}</span></p>
+                            <p class="font-bold mt-2">รายการยา:</p>
+                            ${medListForSummary || '<p class="text-gray-600">ไม่มีรายการยา</p>'}
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="pvs-h2"><span contenteditable="true">แผนการรักษาและเป้าหมาย</span></h2>
+                <div class="pvs-section-card">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <h3 class="pvs-h3">เป้าหมายการรักษา</h3>
+                            <p class="text-gray-600">ลดปวดเหลือ 2/10 ที่ทำกิจวัตรได้ปกติ ไม่ต้องพึ่งยาแก้ปวด</p>
+                            <div class="bg-gray-200 rounded-full h-2.5 my-2">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 80%"></div>
+                            </div>
+                            <p class="text-right text-sm">บรรลุเป้าหมายไปแล้ว 80%</p>
+                        </div>
+                        <div>
+                            <h3 class="pvs-h3">เมื่อไหร่จะหาย? (ตามแผน)</h3>
+                            <p class="text-gray-600"><span contenteditable="true">แผนการรักษาจะค่อยๆ ดีขึ้นในแต่ละช่วงเวลาดังนี้:</span></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 mt-4 text-center">
+                        <div class="p-4 rounded-lg bg-gray-100">
+                            <p class="font-bold">สัปดาห์ที่ 1-2</p>
+                            <p class="text-gray-600 text-sm"><span contenteditable="true">ตรวจ MRI, Epidural Injection, เริ่มปรับพฤติกรรม</span></p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-gray-100">
+                            <p class="font-bold">สัปดาห์ที่ 3-6</p>
+                            <p class="text-gray-600 text-sm"><span contenteditable="true">รักษาตรงจุดด้วยยาและกายภาพ อาจดีขึ้น 30-50%</span></p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-gray-100">
+                            <p class="font-bold">เดือนที่ 2-3</p>
+                            <p class="text-gray-600 text-sm"><span contenteditable="true">ดีขึ้นอย่างต่อเนื่อง ปวดลดลงเหลือ 3-4/10</span></p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-gray-100">
+                            <p class="font-bold">เดือนที่ 4-6</p>
+                            <p class="text-gray-600 text-sm"><span contenteditable="true">ใกล้หายขาด ปวดเหลือ 1-2/10 ใช้ยาตามที่แพทย์สั่ง</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="pvs-h2"><span contenteditable="true">คำแนะนำสำหรับการดูแลตนเองและอาการที่ต้องเฝ้าระวัง</span></h2>
+                <div class="pvs-section-card">
+                    <p><strong>การดูแลตนเอง:</strong></p>
+                    <ul>
+                        <li><div contenteditable="true">พักผ่อนให้เพียงพอและดื่มน้ำมากๆ</div></li>
+                        <li><div contenteditable="true">ทานอาหารที่มีประโยชน์และถูกสุขลักษณะ</div></li>
+                        <li><div contenteditable="true">หากมีอาการไม่ดีขึ้น ควรกลับมาพบแพทย์</div></li>
+                    </ul>
+                    <p class="mt-4"><strong>อาการที่ควรเฝ้าระวัง:</strong></p>
+                    <ul>
+                        <li><div contenteditable="true">อาการชาหรืออ่อนแรงมากขึ้น</div></li>
+                        <li><div contenteditable="true">ไม่สามารถควบคุมการขับถ่ายได้</div></li>
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        // === AI call to generate PFE and medication table ===
+        const pfeUserQuery = `จากข้อมูลผู้ป่วยที่ให้มา, จงสร้างเอกสารให้ความรู้แก่ผู้ป่วยและครอบครัว โดยเน้นคำแนะนำที่ชัดเจนและนำไปปฏิบัติได้จริง.
+        ข้อมูลผู้ป่วย:
+        - HN: ${patientData.HN || '-'}
+        - ชื่อ: ${patientData.Name || '-'}
+        - เพศ: ${patientData.Gender || '-'}
+        - อายุ: ${patientData.Age || '-'}
+        - โรคประจำตัว: ${patientData.Underlying || '-'}
+        - ผลแล็บที่สำคัญ: ${patientData.Lab || '-'}
+        - ผล X-ray: ${patientData.XrayResult || '-'}
+        - ยาที่ต้องกิน: ${patientData.Medication || patientData.MedicationList || '-' }
+        - การวินิจฉัย: ${diagnosisText}
+
+        โปรดจัดรูปแบบคำตอบเป็นหัวข้อและรายการแบบนี้:
+        #สรุปการวินิจฉัย
+        <รายการ>
+
+        #การดูแลตนเองที่บ้าน
+        <รายการ>
+
+        #สิ่งที่ญาติควรสังเกต
+        <รายการ>
+        
+        #เมื่อไหร่ที่ควรมาพบแพทย์ทันที
+        <รายการ>
+
+        #การนัดหมายติดตามผล
+        <รายการ>`;
+
+        const pfeSystemPrompt = `คุณคือบุคลากรทางการแพทย์ผู้เชี่ยวชาญด้านการให้ความรู้แก่ผู้ป่วยและครอบครัว. จงวิเคราะห์ข้อมูลผู้ป่วยและสร้างคำแนะนำที่ครอบคลุมในรูปแบบหัวข้อตามที่กำหนด. คำตอบจะต้องมีแต่เนื้อหาคำแนะนำเท่านั้น โดยไม่ต้องมีส่วนนำหรือส่วนสรุปอื่นๆ และใช้ภาษาที่เข้าใจง่าย ไม่ใช้ศัพท์ทางการแพทย์ที่ซับซ้อน.`;
+
+        // call AI and medication table generation in parallel
+        let generatedText = null;
+        try {
+            const [aiResp, medHtml] = await Promise.all([
+                callGeminiApi(pfeUserQuery, pfeSystemPrompt),
+                generateMedicationTable(patientData)
+            ]);
+            generatedText = aiResp;
+            // hide loading
+            loadingIndicator.classList.add('hidden');
+
+            // Build PFE HTML
+            let pfeHtml = '';
+
+            // 1. Medication table first
+            pfeHtml += `<h2 class="pvs-h2">การใช้ยาอย่างถูกต้อง</h2>`;
+            pfeHtml += `<div class="pvs-section-card">`;
+            pfeHtml += (medHtml && medHtml.trim()) ? medHtml : `<div contenteditable="true">ไม่สามารถจัดตารางยาได้</div>`;
+            pfeHtml += `</div>`;
+
+            // 2. parse aiResp into sections
+            if (generatedText) {
+                const sections = generatedText.split('#').filter(s => s.trim() !== '');
+                const sectionMap = {};
+                sections.forEach(section => {
+                    const lines = section.trim().split('\n').filter(l => l.trim() !== '');
+                    if (lines.length === 0) return;
+                    const title = lines[0].trim();
+                    const content = lines.slice(1).join('\n').trim();
+                    sectionMap[title] = content;
+                });
+
+                const orderedTitles = ['สรุปการวินิจฉัย', 'การดูแลตนเองที่บ้าน', 'สิ่งที่ญาติควรสังเกต', 'เมื่อไหร่ที่ควรมาพบแพทย์ทันที', 'การนัดหมายติดตามผล'];
+                orderedTitles.forEach(title => {
+                    const foundTitle = Object.keys(sectionMap).find(key => key.includes(title));
+                    if (foundTitle) {
+                        const contentList = sectionMap[foundTitle].split('\n').map(item => {
+                            const cleanItem = item.trim().replace(/^[*•\s-]+/, '').trim();
+                            if (cleanItem) {
+                                return `<li><div contenteditable="true">${cleanItem}</div></li>`;
+                            }
+                            return '';
+                        }).join('');
+                        pfeHtml += `
+                            <h2 class="pvs-h2">${title}</h2>
+                            <div class="pvs-section-card">
+                                <ul>
+                                    ${contentList}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            // 3. Add the new Self-Care table at the end
+            pfeHtml += generateSelfCareTable();
+            
+            pfeContent.innerHTML = pfeHtml;
+        } catch (error) {
+            console.error("Failed to generate documents:", error);
+            pfeContent.innerHTML = `<div class="p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded">
+                <p>ไม่สามารถสร้างคำแนะนำได้ในขณะนี้ กรุณาตรวจสอบ API key หรือลองใหม่อีกครั้ง</p>
+            </div>`;
+        }
+    };
+
+    const handlePrint = () => {
+        window.print();
+    };
+
+    patientForm.addEventListener('submit', generateDocuments);
+    printBtn.addEventListener('click', handlePrint);
+</script>
+
+</body>
+
+</html>
