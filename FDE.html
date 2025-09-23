@@ -273,32 +273,6 @@
 
     <div id="input-form" class="no-print paper-container mb-8">
         <h1 class="text-3xl font-bold text-center mb-6 text-gray-700">สร้างเอกสารผู้ป่วยจากข้อมูล AI</h1>
-        <div class="p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 rounded-lg mb-6">
-            <h2 class="font-bold">คำแนะนำ:</h2>
-            <p class="text-sm mt-1">กรุณาวางข้อมูลผู้ป่วยลงในกล่องข้อความด้านล่าง โดยใช้รูปแบบที่กำหนด เพื่อให้ระบบสามารถสร้างคำแนะนำได้ถูกต้อง</p>
-            <p class="text-sm mt-2 font-mono bg-blue-100 p-2 rounded-md">
-                Patient Data:<br>
-                HN: [เลข HN]<br>
-                Name: [ชื่อ-นามสกุล]<br>
-                Language: [Thai/English]<br>
-                Gender: [เพศ]<br>
-                Age: [อายุ]<br>
-                Height: [ส่วนสูง]<br>
-                Weight: [น้ำหนัก]<br>
-                Temp: [อุณหภูมิ]<br>
-                Pulse: [ชีพจร]<br>
-                BP: [ความดันโลหิต]<br>
-                CC: [อาการสำคัญ]<br>
-                PI: [ประวัติปัจจุบัน]<br>
-                PE: [ผลการตรวจร่างกาย]<br>
-                Allergy: [ประวัติแพ้ยา]<br>
-                Underlying: [โรคประจำตัว]<br>
-                Lab: [ผลแล็บที่สำคัญ]<br>
-                Xray result: [ผล x-ray]<br>
-                Medication: [ยาที่ต้องกินที่บ้าน]<br>
-                <strong class="text-green-700">Diagnosis (ICD/SNOMED):</strong> [รหัสและชื่อโรค]
-            </p>
-        </div>
         <form id="patient-form" class="space-y-4">
             <div>
                 <label for="patientDataInput" class="block text-sm font-medium text-gray-700">ข้อมูลผู้ป่วย (วางข้อมูลจากไฟล์ข้อความที่นี่)</label>
@@ -433,7 +407,8 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
 
     // Gemini API call (update apiKey before use)
     const callGeminiApi = async (prompt, systemPrompt) => {
-      const apiKey = "AIzaSyC7r8GZlyuDwjSL9MdelPzrNMoEYIJCuuQ"; // <<<--- กรุณาเปลี่ยน API Key ตรงนี้
+ const apiKey = "AIzaSyBX4x_sffJXdjp5tpQGpTgMbNLipDGKOC8"; // <<<--- กรุณาเปลี่ยน API Key ตรงนี้
+      console.log("Attempting to call Gemini API with key:", apiKey);
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         const payload = {
@@ -454,7 +429,9 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
                 return null;
             }
             const result = await response.json();
-            return result?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            const generatedText = result?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            console.log("AI Response received:", generatedText);
+            return generatedText;
         } catch (err) {
             console.error('callGeminiApi error', err);
             return null;
@@ -810,6 +787,9 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
 
         #สิ่งที่ญาติควรสังเกต
         <รายการ>
+        
+        #เมื่อไหร่ที่ควรมาพบแพทย์ทันที
+        <รายการ>
 
         #การนัดหมายติดตามผล
         <รายการ>`;
@@ -848,10 +828,11 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
                     sectionMap[title] = content;
                 });
 
-                const orderedTitles = ['สรุปการวินิจฉัย', 'การดูแลตนเองที่บ้าน', 'สิ่งที่ญาติควรสังเกต', 'การนัดหมายติดตามผล'];
+                const orderedTitles = ['สรุปการวินิจฉัย', 'การดูแลตนเองที่บ้าน', 'สิ่งที่ญาติควรสังเกต', 'เมื่อไหร่ที่ควรมาพบแพทย์ทันที', 'การนัดหมายติดตามผล'];
                 orderedTitles.forEach(title => {
-                    if (sectionMap[title]) {
-                        const contentList = sectionMap[title].split('\n').map(item => {
+                    const foundTitle = Object.keys(sectionMap).find(key => key.includes(title));
+                    if (foundTitle) {
+                        const contentList = sectionMap[foundTitle].split('\n').map(item => {
                             const cleanItem = item.trim().replace(/^[*•\s-]+/, '').trim();
                             if (cleanItem) {
                                 return `<li><div contenteditable="true">${cleanItem}</div></li>`;
@@ -891,4 +872,5 @@ Diagnosis (ICD/SNOMED): R53.81 Chronic fatigue, K30 Dyspepsia</textarea>
 </script>
 
 </body>
+
 </html>
