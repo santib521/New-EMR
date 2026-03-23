@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>MKT Laboratory EMR - Professional Edition 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; height: 100vh; overflow: hidden; }
+        .critical { color: #dc2626; font-weight: bold; background-color: #fef2f2; }
+        .abnormal { color: #9a3412; font-weight: bold; background-color: #fff7ed; }
+        .sticky-left { position: sticky; left: 0; background: white; z-index: 10; border-right: 1px solid #e2e8f0; }
+        .dialog-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+        .lab-item-compact { padding: 4px 12px; border-bottom: 1px solid #f1f5f9; min-height: 52px; }
+        .history-item { background-color: #f8fafc !important; border-left: 4px solid #94a3b8; }
+        .timeline-mini { display: flex; gap: 6px; font-family: monospace; font-size: 8px; color: #64748b; margin-top: 2px; }
+        .time-node { background: #f8fafc; padding: 1px 4px; border-radius: 3px; border: 1px solid #e2e8f0; }
+        .cd-focus { border-color: #bfdbfe; background: #eff6ff; color: #1d4ed8; font-weight: bold; }
+        .group-header { background-color: #475569; padding: 4px 12px; font-size: 10px; font-weight: 700; color: white; letter-spacing: 0.1em; }
+        .badge-status { font-size: 8px; padding: 1px 4px; border-radius: 4px; font-weight: bold; margin-left: 5px; }
+        .badge-today { background: #2563eb; color: white; }
+        .badge-history { background: #64748b; color: white; }
+        .active-preview { background-color: #e0f2fe !important; border-right: 5px solid #0284c7; }
+        .matrix-table th, .matrix-table td { padding: 3px 8px !important; font-size: 11px; }
+
+        /* COLLECT TIME */
+        .collect-sub-row td { background: #f0f9ff !important; border-top: 2px solid #bae6fd; border-bottom: 1px dashed #bae6fd; padding: 2px 8px !important; }
+        .collect-label { font-size: 8.5px; font-weight: 900; color: #0369a1; text-transform: uppercase; letter-spacing: 0.06em; }
+        .collect-time { font-size: 8px; font-weight: 700; color: #0284c7; font-family: monospace; background: #e0f2fe; padding: 0px 4px; border-radius: 3px; border: 1px solid #bae6fd; }
+        .collect-time-today { color: #dc2626 !important; background: #fef2f2 !important; border-color: #fecaca !important; }
+        .collect-na { font-size: 8px; color: #cbd5e1; font-family: monospace; }
+
+        /* SMART DELTA ALERT — inline, zero extra row height */
+        .delta-badge { display: inline-flex; align-items: center; font-size: 7.5px; font-weight: 900; padding: 0px 4px; border-radius: 3px; margin-left: 4px; font-family: monospace; white-space: nowrap; vertical-align: middle; line-height: 1.5; }
+        .delta-alarm-up  { background:#fef2f2; color:#991b1b; border:1px solid #fca5a5; }
+        .delta-high-up   { background:#fef2f2; color:#dc2626; border:1px solid #fca5a5; }
+        .delta-mid-up    { background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; }
+        .delta-low-up    { background:#fffbeb; color:#d97706; border:1px solid #fde68a; }
+        .delta-alarm-dn  { background:#eff6ff; color:#1e40af; border:1px solid #93c5fd; }
+        .delta-high-dn   { background:#eff6ff; color:#2563eb; border:1px solid #93c5fd; }
+        .delta-mid-dn    { background:#f0fdf4; color:#16a34a; border:1px solid #86efac; }
+        .delta-low-dn    { background:#f0fdf4; color:#15803d; border:1px solid #86efac; }
+        .delta-cell      { display:inline; }
+
+        /* CLINICAL INSIGHTS PANEL */
+        .insights-panel { border-bottom: 1px solid #e2e8f0; background: #fafafa; flex-shrink: 0; }
+        .insights-header { display:flex; align-items:center; justify-content:space-between; padding:7px 14px; cursor:pointer; user-select:none; }
+        .insights-header:hover { background:#f1f5f9; }
+        .insight-cards { padding: 8px 14px 12px; display:flex; flex-direction:column; gap:8px; }
+        .insight-item { border-radius: 12px; padding: 10px 14px; }
+        .insight-item.sev-critical { background:#fef2f2; border:1px solid #fca5a5; }
+        .insight-item.sev-warning  { background:#fffbeb; border:1px solid #fde68a; }
+        .insight-item.sev-info     { background:#eff6ff; border:1px solid #bfdbfe; }
+        .insight-title  { font-size:11px; font-weight:900; display:flex; align-items:center; gap:6px; }
+        .insight-ev     { font-size:9px; font-family:monospace; color:#64748b; margin-top:4px; line-height:1.7; }
+        .insight-action { font-size:10px; color:#374151; margin-top:6px; padding-top:6px; border-top:1px dashed #e2e8f0; display:flex; gap:5px; }
+
+        /* MEDICATION LEGEND */
+        .med-bar { display:flex; flex-wrap:wrap; gap:6px; padding:10px 14px; background:white; border-radius:14px; border:1px solid #e2e8f0; margin-bottom:14px; align-items:center; }
+        .med-bar-title { font-size:9px; font-weight:900; color:#475569; text-transform:uppercase; letter-spacing:.1em; margin-right:4px; flex-shrink:0; }
+        .med-chip { display:inline-flex; align-items:center; gap:4px; font-size:9px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; border:1px solid; }
+
+        /* GRAPH */
+        .graph-stack-item { background:white; padding:16px; border-radius:18px; border:1px solid #e2e8f0; margin-bottom:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+        .graph-group-label { font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; margin-bottom:10px; padding-bottom:8px; border-bottom:2px solid; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        .graph-toggles { display:flex; flex-wrap:wrap; gap:4px; }
+        .gtb { font-size:9px; padding:2px 9px; border-radius:20px; border:1px solid; cursor:pointer; font-weight:bold; transition:all .15s; }
+        .gtb.on { color:white !important; }
+        .graph-canvas-wrap { position:relative; height:185px; margin-top:8px; }
+
+        /* SERIAL LAB INDICATORS */
+        .badge-serial { background:#0d9488; color:white; font-size:7.5px; padding:1px 5px; border-radius:4px; font-weight:900; letter-spacing:.03em; }
+        .serial-item  { border-left:4px solid #0d9488 !important; background:#f0fdfa !important; }
+        .serial-item.active-preview { border-left:4px solid #0d9488 !important; background:#ccfbf1 !important; }
+        .serial-latest { font-size:10px; font-weight:900; font-family:monospace; }
+        .serial-readings-row { display:flex; gap:3px; margin-top:3px; flex-wrap:wrap; align-items:center; }
+        .serial-dot  { display:inline-flex; flex-direction:column; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:1px 5px; min-width:38px; }
+        .serial-dot.hi  { background:#fef2f2; border-color:#fca5a5; }
+        .serial-dot.lo  { background:#eff6ff; border-color:#93c5fd; }
+        .serial-dot.cr  { background:#fef2f2; border-color:#991b1b; animation:pulse-crit 1.2s infinite; }
+        .serial-dot.ok  { background:#f0fdf4; border-color:#86efac; }
+        .serial-dot .sd-time { font-size:7px; color:#94a3b8; font-family:monospace; }
+        .serial-dot .sd-val  { font-size:9.5px; font-weight:900; font-family:monospace; line-height:1.2; }
+        .serial-dot.hi .sd-val { color:#dc2626; }
+        .serial-dot.lo .sd-val { color:#2563eb; }
+        .serial-dot.cr .sd-val { color:#991b1b; }
+        .serial-dot.ok .sd-val { color:#15803d; }
+        @keyframes pulse-crit { 0%,100%{box-shadow:0 0 0 0 #dc262644;} 50%{box-shadow:0 0 0 4px #dc262600;} }
+        /* Alert dot on MONITOR button */
+        .monitor-alert-dot { width:7px;height:7px;background:#dc2626;border-radius:50%;display:inline-block;margin-left:3px;animation:pulse-crit 1s infinite;flex-shrink:0; }
+        /* Serial strip inside TABLE */
+        .serial-strip-row td { background:#f0fdfa !important; border-top:1px solid #99f6e4; border-bottom:2px solid #0d9488; padding:5px 10px !important; }
+        .serial-strip-inner { display:flex; gap:4px; align-items:stretch; flex-wrap:nowrap; overflow-x:auto; padding:1px 0; }
+        .serial-strip-cell { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:44px; border-radius:6px; padding:3px 6px; border:1px solid #e2e8f0; background:white; flex-shrink:0; }
+        .serial-strip-cell.now { border:2px solid #d97706; background:#fffbeb; }
+        .serial-strip-cell.crit { border:2px solid #dc2626; background:#fef2f2; animation:pulse-crit 1.2s infinite; }
+        .serial-strip-cell.hi   { border:1px solid #fca5a5; background:#fef2f2; }
+        .serial-strip-cell.lo   { border:1px solid #93c5fd; background:#eff6ff; }
+        .serial-strip-cell.ok   { border:1px solid #86efac; background:#f0fdf4; }
+        .ssc-time { font-size:7.5px; color:#94a3b8; font-family:monospace; }
+        .ssc-val  { font-size:11px; font-weight:900; font-family:monospace; line-height:1.2; }
+        .ssc-val.crit { color:#991b1b; }
+        .ssc-val.hi   { color:#dc2626; }
+        .ssc-val.lo   { color:#2563eb; }
+        .ssc-val.ok   { color:#15803d; }
+        .ssc-ins  { font-size:9px; font-weight:900; color:#7c3aed; font-family:monospace; }
+        .ssc-trend{ font-size:8px; color:#64748b; }
+        .fs-toolbar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0; flex-shrink:0; flex-wrap:wrap; }
+        .fs-day-btn { font-size:9px; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid #e2e8f0; background:white; cursor:pointer; color:#64748b; transition:all .15s; white-space:nowrap; }
+        .fs-day-btn.active { background:#0f172a; color:white; border-color:#0f172a; }
+        .fs-table { width:100%; border-collapse:collapse; font-size:10.5px; }
+        .fs-table th { position:sticky; top:0; background:#1e293b; color:#94a3b8; font-size:8.5px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; padding:5px 8px; text-align:center; white-space:nowrap; z-index:20; }
+        .fs-table th.fs-param-col { left:0; z-index:30; background:#0f172a; color:#cbd5e1; text-align:left; min-width:140px; }
+        .fs-table td { padding:3px 8px; text-align:center; border-bottom:1px solid #f1f5f9; border-right:1px solid #f8fafc; white-space:nowrap; font-family:monospace; font-size:11px; }
+        .fs-table td.fs-param-label { position:sticky; left:0; background:white; z-index:10; text-align:left; font-family:'Sarabun',sans-serif; font-weight:700; font-size:10px; color:#334155; border-right:2px solid #e2e8f0; padding-left:12px; }
+        .fs-table td.fs-unit { font-size:8px; color:#94a3b8; font-family:'Sarabun',sans-serif; font-weight:normal; display:block; margin-top:1px; }
+        .fs-table tr:hover td { background:#f8fafc; }
+        .fs-table tr:hover td.fs-param-label { background:#f1f5f9; }
+        .fs-group-hdr td { background:#475569 !important; color:white; font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; padding:3px 12px !important; }
+        .fs-val-hi  { color:#dc2626; font-weight:900; }
+        .fs-val-lo  { color:#2563eb; font-weight:900; }
+        .fs-val-crit{ color:#991b1b; font-weight:900; background:#fef2f2; border-radius:3px; padding:0 3px; }
+        .fs-val-ok  { color:#15803d; }
+        .fs-val-ins { color:#7c3aed; font-weight:800; }
+        .fs-val-empty { color:#e2e8f0; }
+        .fs-now-col { background:#fffbeb !important; }
+        .fs-now-hdr { background:#d97706 !important; color:white !important; }
+        .fs-sparkline { display:flex; align-items:flex-end; gap:1px; height:18px; margin-top:2px; }
+        .fs-spark-bar { width:5px; border-radius:1px 1px 0 0; min-height:2px; opacity:.75; }
+        .fs-summary-row td { background:#f0fdf4 !important; font-size:9px; color:#166534; font-weight:700; }
+        .fs-summary-row td.fs-param-label { background:#f0fdf4 !important; }
+        .fs-insulin-row td { background:#faf5ff !important; }
+        .fs-insulin-row td.fs-param-label { background:#faf5ff !important; }
+
+        /* DASHBOARD */
+        .dashboard-modal { display:none; position:fixed; inset:0; background:#f8fafc; z-index:100; overflow-y:auto; padding:20px; }
+        .status-tab { padding:4px 12px; border-radius:20px; font-size:10px; font-weight:bold; cursor:pointer; border:1px solid #e2e8f0; background:white; }
+        .status-tab.active { background:#1e293b; color:white; border-color:#1e293b; }
+        .card-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; margin-top:20px; }
+        .lab-card { background:white; border-radius:20px; padding:20px; border:1px solid #e2e8f0; display:flex; flex-direction:column; justify-content:space-between; min-height:280px; box-shadow:0 4px 6px -1px rgb(0 0 0/.1); }
+        .gauge-container { position:relative; height:100px; margin:15px 0; }
+        .gauge-bg { stroke:#f1f5f9; stroke-width:8; fill:none; stroke-linecap:round; }
+        .gauge-needle { stroke-width:3; fill:none; stroke-linecap:round; transition:all .5s ease; }
+    </style>
+</head>
+<body class="flex flex-col text-sm">
+
+<!-- TOP NAV -->
+<div class="bg-white border-b p-3 flex justify-between items-center shadow-md z-10">
+    <div class="flex items-center gap-5">
+        <h1 class="text-blue-900 font-black text-xl tracking-tighter">MKT LAB EMR</h1>
+        <div class="h-6 w-px bg-slate-200"></div>
+        <div class="text-sm font-bold text-slate-700">HN: 001-25-000456 | คุณสมชาย ใจดี (54Y / M)</div>
+    </div>
+    <button onclick="openDashboard()" class="bg-blue-600 text-white px-5 py-1.5 rounded-xl text-[10px] font-bold shadow-lg hover:bg-blue-700 transition">
+        หันจออธิบายคนไข้
+    </button>
+</div>
+
+<!-- MAIN -->
+<div class="flex flex-1 overflow-hidden">
+
+    <!-- LEFT: Lab list -->
+    <div class="w-1/3 bg-white border-r flex flex-col shadow-inner">
+        <div class="p-3 bg-slate-50 border-b flex flex-col gap-2">
+            <div class="flex justify-between items-center">
+                <span class="text-[11px] font-black text-blue-800 uppercase tracking-widest">Lab Groups Navigation</span>
+                <label class="flex items-center gap-2 cursor-pointer bg-white px-2 py-0.5 rounded-full border shadow-sm">
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Show History</span>
+                    <input type="checkbox" id="toggleShowAll" onchange="renderList()" class="form-checkbox h-3 w-3 text-blue-600 rounded">
+                </label>
+            </div>
+            <select id="groupFilter" onchange="renderList()" class="w-full text-[10px] border border-slate-300 rounded-lg p-1.5 bg-white outline-none">
+                <option value="ALL">All Groups</option>
+                <option value="Hematology">Hematology</option>
+                <option value="BloodChem">Blood Chemistry</option>
+                <option value="Immunology">Immunology</option>
+                <option value="Urinalysis">Urinalysis</option>
+                <option value="Microbiology">Microbiology</option>
+                <option value="CardiacMarker">Cardiac Markers</option>
+            </select>
+        </div>
+        <div id="orderList" class="overflow-y-auto flex-1 divide-y divide-slate-100"></div>
+    </div>
+
+    <!-- RIGHT: Matrix -->
+    <div class="flex-1 bg-slate-100 p-3 overflow-auto">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col h-full">
+
+            <!-- Toolbar -->
+            <div class="p-4 border-b bg-white flex justify-between items-center flex-shrink-0">
+                <div class="flex gap-4 items-center">
+                    <span class="font-black text-slate-800 text-sm tracking-tight">CLINICAL MATRIX ANALYTICS</span>
+                    <div class="flex bg-slate-100 p-1 rounded-xl border">
+                        <button onclick="switchView('table')"   id="btnTable"   class="px-4 py-1 text-[10px] rounded-lg bg-white shadow-sm font-bold">TABLE</button>
+                        <button onclick="switchView('graph')"   id="btnGraph"   class="px-4 py-1 text-[10px] rounded-lg font-bold text-slate-500 hover:text-slate-700">GRAPH</button>
+                        <button onclick="switchView('monitor')" id="btnMonitor" class="px-4 py-1 text-[10px] rounded-lg font-bold text-slate-500 hover:text-slate-700 flex items-center gap-1">
+                            <i class="fa-solid fa-heart-pulse text-rose-500"></i> MONITOR<span id="monitorAlertDot" class="monitor-alert-dot hidden"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLINICAL INSIGHTS PANEL -->
+            <div id="insightsPanel" class="insights-panel hidden">
+                <div class="insights-header" onclick="toggleInsights()">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-brain text-violet-600 text-sm"></i>
+                        <span class="text-[11px] font-black text-slate-800 uppercase tracking-wider">Clinical Insights</span>
+                        <span id="insightsBadge" class="text-[9px] font-black px-2 py-0.5 rounded-full"></span>
+                    </div>
+                    <i id="insightsChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs" style="transition:transform .25s"></i>
+                </div>
+                <div id="insightBody" class="insight-cards"></div>
+            </div>
+
+            <!-- TABLE VIEW -->
+            <div id="tableView" class="flex-1 overflow-auto">
+                <table class="matrix-table w-full text-left border-collapse text-center">
+                    <thead class="sticky top-0 z-20">
+                        <tr class="bg-slate-50 text-[9px] text-slate-500 uppercase font-black border-b">
+                            <th class="sticky-left min-w-[200px] bg-slate-50 text-left p-3">Test Description (Unit)</th>
+                            <th class="min-w-[88px] bg-blue-50 text-blue-700 border-l italic">08/03/26 Today</th>
+                            <th class="min-w-[68px] border-l italic">15/12/25</th>
+                            <th class="min-w-[68px] border-l italic">10/09/25</th>
+                            <th class="min-w-[68px] border-l italic text-slate-500">22/05/25</th>
+                            <th class="min-w-[68px] border-l italic text-slate-400">05/01/25</th>
+                            <th class="min-w-[68px] border-l italic text-slate-300">12/10/24</th>
+                            <th class="min-w-[84px] border-l font-bold">Reference</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonBody" class="divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+
+            <!-- GRAPH VIEW -->
+            <div id="graphView" class="hidden flex-1 p-4 bg-slate-50 overflow-y-auto">
+                <div id="medBar" class="med-bar hidden"></div>
+                <div id="graphStack" class="max-w-4xl mx-auto"></div>
+            </div>
+
+            <!-- MONITORING FLOWSHEET VIEW -->
+            <div id="monitorView" class="hidden flex-1 flex flex-col overflow-hidden bg-slate-50">
+                <!-- Day selector toolbar -->
+                <div class="fs-toolbar">
+                    <i class="fa-solid fa-heart-pulse text-rose-500 text-sm flex-shrink-0"></i>
+                    <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest flex-shrink-0">Monitoring Flowsheet</span>
+                    <div class="h-4 w-px bg-slate-300 flex-shrink-0"></div>
+                    <span class="text-[9px] text-slate-500 flex-shrink-0">เลือกวัน:</span>
+                    <div id="fsDayBtns" class="flex gap-2 flex-wrap"></div>
+                    <div class="ml-auto flex items-center gap-2">
+                        <span class="text-[8.5px] text-slate-400">ทุก</span>
+                        <select id="fsIntervalSel" onchange="renderFlowsheet()" class="text-[9px] border border-slate-200 rounded-lg px-2 py-1 bg-white outline-none font-bold text-slate-700">
+                            <option value="4">4 ชั่วโมง</option>
+                            <option value="2">2 ชั่วโมง</option>
+                            <option value="1">1 ชั่วโมง</option>
+                        </select>
+                        <label class="flex items-center gap-1.5 text-[9px] text-slate-500 cursor-pointer">
+                            <input type="checkbox" id="fsShowAll" onchange="renderFlowsheet()" class="h-3 w-3 rounded">
+                            แสดงทุก param
+                        </label>
+                    </div>
+                </div>
+                <!-- Flowsheet table -->
+                <div class="flex-1 overflow-auto">
+                    <table class="fs-table" id="fsTable">
+                        <thead id="fsThead"></thead>
+                        <tbody id="fsTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- EMPTY STATE -->
+            <div id="emptyState" class="flex-1 flex flex-col items-center justify-center text-slate-300 gap-3 italic text-sm">
+                <i class="fa-solid fa-microscope text-5xl opacity-20"></i>
+                <p>กรุณาเลือกรายการ Lab เพื่อวิเคราะห์ข้อมูลเปรียบเทียบ</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RESULT DIALOG -->
+<div id="resultDialog" class="fixed inset-0 dialog-overlay hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-2/5 overflow-hidden border">
+        <div id="dialogContent" class="p-10"></div>
+        <div class="p-6 bg-slate-50 border-t flex justify-end gap-4">
+            <button onclick="closeDialog()" class="bg-slate-900 text-white px-8 py-2.5 rounded-2xl text-xs font-bold hover:bg-black">CLOSE</button>
+        </div>
+    </div>
+</div>
+
+<!-- PATIENT DASHBOARD -->
+<div id="patientDashboard" class="dashboard-modal">
+    <div class="max-w-7xl mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex gap-2">
+                <button class="status-tab active">ทั้งหมด</button>
+                <button class="status-tab text-red-600 border-red-100">วิกฤต</button>
+                <button class="status-tab text-orange-600 border-orange-100">ผิดปกติ</button>
+                <button class="status-tab text-green-600 border-green-100">ปกติ</button>
+            </div>
+            <button onclick="closeDashboard()" class="bg-slate-200 text-slate-600 h-10 w-10 rounded-full flex items-center justify-center hover:bg-slate-300">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <div class="card-grid" id="dashboardGrid"></div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA CONSTANTS
+// ═══════════════════════════════════════════════════════
+const clinicalDates = ['12/10/24','05/01/25','22/05/25','10/09/25','15/12/25','08/03/26'];
+
+// ── MEDICATION / TREATMENT EVENTS ──────────────────────
+const medicationEvents = [
+    { dateLabel:'05/01/25', shortLabel:'Atorva 20mg',  label:'เริ่ม Atorvastatin 20mg',       color:'#7c3aed', type:'start'  },
+    { dateLabel:'10/09/25', shortLabel:'Atorva ↑40mg', label:'เพิ่ม Atorvastatin 40mg',       color:'#7c3aed', type:'change' },
+    { dateLabel:'05/01/25', shortLabel:'Met 500mg',    label:'เริ่ม Metformin 500mg',          color:'#0891b2', type:'start'  },
+    { dateLabel:'22/05/25', shortLabel:'Met ↑1000mg',  label:'เพิ่ม Metformin 1000mg',        color:'#0891b2', type:'change' },
+    { dateLabel:'15/12/25', shortLabel:'PTU เริ่ม',   label:'เริ่ม Propylthiouracil 100mg',  color:'#d97706', type:'start'  },
+    { dateLabel:'10/09/25', shortLabel:'Furosemide',   label:'เริ่ม Furosemide 40mg',         color:'#dc2626', type:'start'  },
+];
+
+// ── CLINICAL GRAPH GROUPS ───────────────────────────────
+const clinicalGraphGroups = {
+    CBC:    [
+        { title:'Anemia Panel',            color:'#dc2626', items:['Hemoglobin','Hematocrit','RBC Count'] },
+        { title:'WBC & Differential',      color:'#2563eb', items:['WBC Count','Neutrophils','Lymphocytes','Monocytes'] },
+        { title:'Red Cell Morphology',     color:'#0891b2', items:['MCV','MCH','MCHC'] },
+        { title:'Platelet',                color:'#7c3aed', items:['Platelet Count'] },
+    ],
+    LIVER:  [
+        { title:'Hepatocellular Enzymes',  color:'#ea580c', items:['ALT (SGPT)','AST (SGOT)','LDH'] },
+        { title:'Cholestasis & Bilirubin', color:'#ca8a04', items:['GGT','ALP','Total Bilirubin','Direct Bilirubin'] },
+        { title:'Synthetic Function',      color:'#16a34a', items:['Albumin','Total Protein','A/G Ratio'] },
+    ],
+    LIPID:  [
+        { title:'Atherogenic Panel',       color:'#dc2626', items:['LDL Cholesterol','Total Cholesterol','Non-HDL Cholesterol','Triglycerides'] },
+        { title:'Cardioprotective',        color:'#16a34a', items:['HDL Cholesterol'] },
+    ],
+    GLUCOSE:[
+        { title:'Glycemic Control',        color:'#7c3aed', items:['Fasting Blood Sugar','2h Post-Prandial','HbA1C','Fructosamine'] },
+    ],
+    ELEC:   [
+        { title:'Major Electrolytes',      color:'#0891b2', items:['Sodium (Na)','Potassium (K)','Chloride (Cl)','CO₂ (Bicarb)'] },
+        { title:'Divalent Ions',           color:'#059669', items:['Calcium (Ca)','Phosphorus (P)','Magnesium (Mg)'] },
+    ],
+    THYROID:[
+        { title:'Thyroid Axis',            color:'#7c3aed', items:['TSH','Free T3 (FT3)','Free T4 (FT4)'] },
+        { title:'Thyroid Autoantibodies',  color:'#dc2626', items:['Anti-TPO Ab','Anti-TG Ab'] },
+    ],
+    CARDIAC:[
+        { title:'Cardiac Necrosis Markers',color:'#dc2626', items:['Troponin I (hs)','Troponin T (hs)','CK-MB','Myoglobin'] },
+        { title:'Heart Failure Markers',   color:'#7c3aed', items:['BNP','NT-proBNP'] },
+    ],
+    INFLAM: [
+        { title:'Acute Phase Reactants',   color:'#ea580c', items:['hs-CRP','ESR','Ferritin','Procalcitonin'] },
+    ],
+    KIDNEY: [
+        { title:'Filtration Function',     color:'#0891b2', items:['Creatinine','BUN','eGFR (CKD-EPI)'] },
+        { title:'Other Metabolites',       color:'#7c3aed', items:['Uric Acid'] },
+    ],
+    COAG:   [
+        { title:'Coagulation Times',       color:'#dc2626', items:['Prothrombin Time (PT)','aPTT','Thrombin Time (TT)'] },
+        { title:'INR & Factors',           color:'#ea580c', items:['INR','Fibrinogen'] },
+    ],
+    UA:     [
+        { title:'Quantitative Markers',    color:'#0891b2', items:['Specific Gravity','WBC (Urine)','RBC (Urine)','Micro-albumin'] },
+    ],
+};
+
+// ── CLINICAL PATTERN DEFINITIONS ───────────────────────
+const PATTERNS = [
+    {
+        id:'sepsis', severity:'critical', icon:'🚨', title:'Sepsis Alert Pattern',
+        check(l){ const wbc=n(l,'CBC','WBC Count'),plt=n(l,'CBC','Platelet Count'),crp=n(l,'INFLAM','hs-CRP'),pct=n(l,'INFLAM','Procalcitonin'); return wbc>15&&plt<120&&(crp>15||pct>0.5); },
+        ev(l){ return ev4(l,['CBC:WBC Count:>15:10³/µL','CBC:Platelet Count:<120:10³/µL','INFLAM:hs-CRP:>15:mg/L','INFLAM:Procalcitonin:>0.5:ng/mL']); },
+        action:'ส่ง Blood Culture STAT · CBC repeat ทุก 6h · พิจารณา Empirical Antibiotics · ประเมิน qSOFA score'
+    },
+    {
+        id:'bact', severity:'critical', icon:'🦠', title:'Bacterial Infection Pattern',
+        check(l){ const wbc=n(l,'CBC','WBC Count'),nt=n(l,'CBC','Neutrophils'),crp=n(l,'INFLAM','hs-CRP'); return wbc>11&&nt>75&&(crp==null||crp>8); },
+        ev(l){ return ev4(l,['CBC:WBC Count:>11:10³/µL','CBC:Neutrophils:>75:%','INFLAM:hs-CRP:>8:mg/L']); },
+        action:'ส่ง Blood/Urine culture · Chest X-ray · พิจารณา Antibiotics · ติดตาม Fever curve'
+    },
+    {
+        id:'cardiac', severity:'critical', icon:'❤️‍🔥', title:'Acute Cardiac Injury',
+        check(l){ return n(l,'CARDIAC','Troponin I (hs)')>19 || n(l,'CARDIAC','Troponin T (hs)')>14 || n(l,'CARDIAC','BNP')>100; },
+        ev(l){ return ev4(l,['CARDIAC:Troponin I (hs):>19:ng/L','CARDIAC:Troponin T (hs):>14:ng/L','CARDIAC:BNP:>100:pg/mL','CARDIAC:NT-proBNP:>300:pg/mL']); },
+        action:'12-lead ECG stat · Serial Troponin (0h/3h) · Cardiology consult · TIMI/GRACE score'
+    },
+    {
+        id:'hyperk', severity:'critical', icon:'⚡', title:'Hyperkalemia — Cardiac Risk',
+        check(l){ return n(l,'ELEC','Potassium (K)')>=5.5; },
+        ev(l){ return ev4(l,['ELEC:Potassium (K):≥5.5:mEq/L']); },
+        action:'ECG stat (Peaked T/Wide QRS) · Calcium gluconate ถ้า EKG เปลี่ยน · ตรวจ Renal function · หยุด K-sparing drugs'
+    },
+    {
+        id:'anemia', severity:'warning', icon:'🩸', title:'Microcytic Anemia Pattern',
+        check(l){ return n(l,'CBC','Hemoglobin')<13 && n(l,'CBC','MCV')<82 && (n(l,'CBC','MCH')==null||n(l,'CBC','MCH')<27); },
+        ev(l){ return ev4(l,['CBC:Hemoglobin:<13:g/dL','CBC:MCV:<82:fL','CBC:MCH:<27:pg']); },
+        action:'ส่ง Iron study (Fe/TIBC/Ferritin) · Peripheral blood smear · ตรวจหา Occult bleeding'
+    },
+    {
+        id:'liver', severity:'warning', icon:'🫁', title:'Hepatocellular Injury Pattern',
+        check(l){ return n(l,'LIVER','ALT (SGPT)')>102 || n(l,'LIVER','GGT')>61; },
+        ev(l){ return ev4(l,['LIVER:ALT (SGPT):>2.5×ULN:U/L','LIVER:AST (SGOT):↑:U/L','LIVER:GGT:↑:U/L']); },
+        action:'ส่ง HBsAg · Anti-HCV · ประวัติยา/แอลกอฮอล์ · Liver ultrasound · ANA panel'
+    },
+    {
+        id:'lipid', severity:'warning', icon:'🧈', title:'Very High Cardiovascular Risk',
+        check(l){ return n(l,'LIPID','LDL Cholesterol')>160 && (n(l,'LIPID','HDL Cholesterol')<40||n(l,'LIPID','Triglycerides')>150); },
+        ev(l){ return ev4(l,['LIPID:LDL Cholesterol:>160:mg/dL','LIPID:HDL Cholesterol:<40:mg/dL','LIPID:Triglycerides:>150:mg/dL']); },
+        action:'คำนวณ 10-year CVD risk · ปรับ Statin dose · Lifestyle counseling · ติดตาม LDL ทุก 3 เดือน'
+    },
+    {
+        id:'dm', severity:'warning', icon:'🍬', title:'Uncontrolled Diabetes (HbA1C ≥ 8%)',
+        check(l){ return n(l,'GLUCOSE','HbA1C')>=8 || n(l,'GLUCOSE','Fasting Blood Sugar')>130; },
+        ev(l){ return ev4(l,['GLUCOSE:HbA1C:≥8%:%','GLUCOSE:Fasting Blood Sugar:>130:mg/dL','GLUCOSE:2h Post-Prandial:>180:mg/dL']); },
+        action:'ทบทวน Adherence · ปรับ Metformin dose · พิจารณา GLP-1/SGLT2i · DM diet counseling'
+    },
+    {
+        id:'hypo', severity:'warning', icon:'🦋', title:'Hypothyroidism Pattern (Overt)',
+        check(l){ return n(l,'THYROID','TSH')>4 && (n(l,'THYROID','Free T4 (FT4)')==null||n(l,'THYROID','Free T4 (FT4)')<0.8); },
+        ev(l){ return ev4(l,['THYROID:TSH:>4:mIU/L','THYROID:Free T4 (FT4):<0.8:ng/dL','THYROID:Anti-TPO Ab:↑:IU/mL']); },
+        action:'ตรวจ Anti-TPO Ab (Hashimoto) · พิจารณาเริ่ม Levothyroxine · ติดตาม TSH ทุก 6-8 สัปดาห์'
+    },
+];
+
+// ── LAB DATA ───────────────────────────────────────────
+const allLabs = [
+    { id:'CBC', group:'Hematology', name:'Complete Blood Count (CBC)',
+      doctor:'นพ.ชัยมงคล', today:true, reported:true, od:'08/03/26 09:00', cd:'09:15', rd:'10:30', isAbnormal:true,
+      collectTimes:['08:45','08:50','08:55','09:00','09:05','09:15'],
+      data:[
+        { item:'WBC Count',      unit:'10³/µL', values:['7.8','8.2','8.5','8.8','9.2','18.5 (VH)'],ref:'4.0–10.0', alert:'critical',gaugePos:90},
+        { item:'RBC Count',      unit:'10⁶/µL', values:['5.0','4.9','4.8','4.7','4.6','4.2 (L)'], ref:'4.5–5.5',  alert:'abnormal',gaugePos:20},
+        { item:'Hemoglobin',     unit:'g/dL',   values:['14.5','14.2','14.0','13.8','13.5','12.1 (L)'],ref:'13–17',alert:'abnormal',gaugePos:25},
+        { item:'Hematocrit',     unit:'%',      values:['43','42','41','40','40','36 (L)'],        ref:'40–52',    alert:'abnormal',gaugePos:22},
+        { item:'MCV',            unit:'fL',     values:['86','85','84','83','83','80'],             ref:'80–100',   alert:'',        gaugePos:45},
+        { item:'MCH',            unit:'pg',     values:['29','28','28','27','27','26'],             ref:'27–33',    alert:'',        gaugePos:40},
+        { item:'MCHC',           unit:'g/dL',   values:['33','33','32','32','32','31'],             ref:'32–36',    alert:'',        gaugePos:35},
+        { item:'Platelet Count', unit:'10³/µL', values:['250','245','238','230','220','98 (VL)'],   ref:'150–400',  alert:'critical',gaugePos:8 },
+        { item:'Neutrophils',    unit:'%',      values:['58','60','62','64','65','82 (H)'],         ref:'50–70',    alert:'abnormal',gaugePos:78},
+        { item:'Lymphocytes',    unit:'%',      values:['33','31','29','27','26','12 (L)'],         ref:'20–40',    alert:'abnormal',gaugePos:18},
+        { item:'Monocytes',      unit:'%',      values:['6','6','6','6','6','5'],                   ref:'2–8',      alert:'',        gaugePos:50},
+        { item:'Eosinophils',    unit:'%',      values:['2','2','2','2','2','1'],                   ref:'1–4',      alert:'',        gaugePos:48},
+        { item:'Basophils',      unit:'%',      values:['0.5','0.5','0.6','0.6','0.7','0.5'],       ref:'0–1',      alert:'',        gaugePos:50},
+    ]},
+    { id:'COAG', group:'Hematology', name:'Coagulation Profile (PT/PTT/INR)',
+      doctor:'พญ.นลินี', today:true, reported:true, od:'08/03/26 09:05', cd:'09:20', rd:'11:30', isAbnormal:true,
+      collectTimes:['09:00','09:05','09:10','09:12','09:15','09:20'],
+      data:[
+        { item:'Prothrombin Time (PT)', unit:'sec',   values:['12','12','12','13','13','18 (H)'],      ref:'11–14',   alert:'abnormal',gaugePos:78},
+        { item:'aPTT',                  unit:'sec',   values:['28','29','29','30','31','48 (H)'],      ref:'25–35',   alert:'abnormal',gaugePos:82},
+        { item:'INR',                   unit:'ratio', values:['1.0','1.0','1.0','1.1','1.1','1.6 (H)'],ref:'0.8–1.2',alert:'critical',gaugePos:88},
+        { item:'Thrombin Time (TT)',    unit:'sec',   values:['14','14','15','15','15','21 (H)'],      ref:'14–19',   alert:'abnormal',gaugePos:80},
+        { item:'Fibrinogen',            unit:'mg/dL', values:['280','285','290','300','310','510 (H)'],ref:'200–400', alert:'critical',gaugePos:92},
+    ]},
+    { id:'RETIC', group:'Hematology', name:'Reticulocyte Count',
+      doctor:'นพ.ชัยมงคล', today:false, reported:true, od:'15/12/25 09:30', cd:'09:45', rd:'11:00', isAbnormal:false,
+      collectTimes:['–','–','–','–','09:45','–'],
+      data:[
+        { item:'Reticulocyte %',    unit:'%',      values:['1.2','1.3','1.2','1.3','1.4','-'],ref:'0.5–1.5',alert:'',gaugePos:50},
+        { item:'Reticulocyte Abs.', unit:'10³/µL', values:['60','63','58','62','65','-'],     ref:'25–75',  alert:'',gaugePos:52},
+    ]},
+    { id:'LIPID', group:'BloodChem', name:'Lipid Profile (Full Set)',
+      doctor:'นพ.ชัยมงคล', today:true, reported:true, od:'08/03/26 09:05', cd:'09:20', rd:'11:15', isAbnormal:true,
+      collectTimes:['09:10','09:10','09:10','09:15','09:18','09:20'],
+      data:[
+        { item:'Total Cholesterol',   unit:'mg/dL',values:['180','190','195','205','210','240 (H)'],  ref:'< 200', alert:'abnormal',gaugePos:75},
+        { item:'LDL Cholesterol',     unit:'mg/dL',values:['110','125','135','145','160','192 (VH)'], ref:'< 130', alert:'critical',gaugePos:85},
+        { item:'HDL Cholesterol',     unit:'mg/dL',values:['45','48','50','45','42','35 (L)'],        ref:'> 40',  alert:'abnormal',gaugePos:20},
+        { item:'Triglycerides',       unit:'mg/dL',values:['120','130','140','145','140','165 (H)'],  ref:'< 150', alert:'abnormal',gaugePos:70},
+        { item:'Non-HDL Cholesterol', unit:'mg/dL',values:['135','142','145','160','168','205 (H)'],  ref:'< 160', alert:'critical',gaugePos:88},
+    ]},
+    { id:'LIVER', group:'BloodChem', name:'Liver Panel (LFT Full)',
+      doctor:'พญ.นลินี', today:true, reported:true, od:'08/03/26 09:10', cd:'09:25', rd:'12:00', isAbnormal:true,
+      collectTimes:['09:00','09:05','09:10','09:15','09:20','09:25'],
+      data:[
+        { item:'ALT (SGPT)',         unit:'U/L',   values:['35','38','38','40','42','85 (H)'],      ref:'0–41',    alert:'abnormal',gaugePos:80},
+        { item:'AST (SGOT)',         unit:'U/L',   values:['30','31','32','34','35','62 (H)'],      ref:'0–40',    alert:'abnormal',gaugePos:75},
+        { item:'ALP',                unit:'U/L',   values:['75','78','80','82','90','155 (H)'],     ref:'44–147',  alert:'abnormal',gaugePos:72},
+        { item:'GGT',                unit:'U/L',   values:['28','30','32','35','38','105 (H)'],     ref:'8–61',    alert:'critical',gaugePos:90},
+        { item:'Total Bilirubin',    unit:'mg/dL', values:['0.8','0.9','0.9','1.0','1.1','2.4 (H)'],ref:'0.2–1.2',alert:'abnormal',gaugePos:82},
+        { item:'Direct Bilirubin',   unit:'mg/dL', values:['0.2','0.2','0.3','0.3','0.4','1.2 (VH)'],ref:'0.0–0.3',alert:'critical',gaugePos:92},
+        { item:'Indirect Bilirubin', unit:'mg/dL', values:['0.6','0.7','0.6','0.7','0.7','1.2 (H)'],ref:'0.1–1.0',alert:'abnormal',gaugePos:78},
+        { item:'Albumin',            unit:'g/dL',  values:['4.2','4.1','4.0','3.9','3.8','3.1 (L)'],ref:'3.5–5.0',alert:'abnormal',gaugePos:20},
+        { item:'Total Protein',      unit:'g/dL',  values:['7.2','7.1','7.0','6.9','6.8','5.8 (L)'],ref:'6.3–8.2',alert:'abnormal',gaugePos:22},
+        { item:'Globulin',           unit:'g/dL',  values:['2.8','2.9','3.0','3.0','3.0','2.7'],    ref:'2.0–3.5', alert:'',       gaugePos:48},
+        { item:'A/G Ratio',          unit:'ratio', values:['1.5','1.4','1.3','1.3','1.3','1.1 (L)'],ref:'1.2–2.2', alert:'',       gaugePos:35},
+        { item:'LDH',                unit:'U/L',   values:['180','185','190','195','200','325 (H)'], ref:'140–280', alert:'abnormal',gaugePos:78},
+    ]},
+    { id:'KIDNEY', group:'BloodChem', name:'Kidney Function (BUN/Cr/eGFR)',
+      doctor:'พญ.นลินี', today:true, reported:true, od:'08/03/26 09:12', cd:'09:30', rd:'11:00', isAbnormal:false,
+      collectTimes:['09:05','09:10','09:15','09:20','09:25','09:30'],
+      data:[
+        { item:'BUN',            unit:'mg/dL',          values:['12','14','14','15','16','18'],              ref:'7–20',      alert:'',        gaugePos:50},
+        { item:'Creatinine',     unit:'mg/dL',          values:['1.00','1.02','1.05','1.08','1.10','1.05'],  ref:'0.7–1.2',   alert:'',        gaugePos:45},
+        { item:'BUN/Cr Ratio',   unit:'ratio',          values:['12','13.7','13.3','13.9','14.5','17.1'],    ref:'10–20',     alert:'',        gaugePos:55},
+        { item:'eGFR (CKD-EPI)', unit:'mL/min/1.73m²', values:['82','80','78','76','74','72'],              ref:'> 60',      alert:'',        gaugePos:60},
+        { item:'Uric Acid',      unit:'mg/dL',          values:['5.5','5.8','6.0','6.5','7.0','8.5 (H)'],   ref:'3.5–7.2',   alert:'abnormal',gaugePos:78},
+    ]},
+    { id:'GLUCOSE', group:'BloodChem', name:'Glucose Profile (FBS/HbA1C)',
+      doctor:'นพ.ชัยมงคล', today:true, reported:true, od:'08/03/26 09:00', cd:'09:15', rd:'10:30', isAbnormal:true,
+      serial:true, serialLabel:'CBG q4h', serialParamId:'cbg', serialInterval:'q 4h',
+      collectTimes:['07:30','07:30','07:35','07:35','07:40','07:45'],
+      data:[
+        { item:'Fasting Blood Sugar', unit:'mg/dL',  values:['95','100','105','110','118','132 (H)'],  ref:'70–100',  alert:'abnormal',gaugePos:78},
+        { item:'2h Post-Prandial',    unit:'mg/dL',  values:['130','138','145','150','158','185 (H)'], ref:'< 140',   alert:'critical',gaugePos:88},
+        { item:'HbA1C',               unit:'%',      values:['6.5','6.8','7.2','7.0','7.5','8.1 (H)'],ref:'< 6.5',   alert:'critical',gaugePos:90},
+        { item:'Fructosamine',        unit:'µmol/L', values:['220','235','240','250','258','310 (H)'], ref:'205–285', alert:'abnormal',gaugePos:75},
+    ]},
+    { id:'ELEC', group:'BloodChem', name:'Electrolyte Panel (Na/K/Cl/CO2)',
+      doctor:'พญ.นลินี', today:true, reported:true, od:'08/03/26 09:15', cd:'09:30', rd:'11:00', isAbnormal:true,
+      collectTimes:['09:10','09:12','09:15','09:20','09:25','09:30'],
+      data:[
+        { item:'Sodium (Na)',    unit:'mEq/L',values:['140','139','138','137','136','148 (H)'],  ref:'136–145',alert:'abnormal',gaugePos:80},
+        { item:'Potassium (K)',  unit:'mEq/L',values:['4.0','4.1','4.2','4.3','4.4','5.9 (H)'], ref:'3.5–5.0',alert:'critical',gaugePos:90},
+        { item:'Chloride (Cl)', unit:'mEq/L',values:['100','101','102','103','104','110 (H)'],  ref:'98–106',  alert:'abnormal',gaugePos:75},
+        { item:'CO₂ (Bicarb)', unit:'mEq/L',values:['24','24','23','23','22','19 (L)'],         ref:'22–29',   alert:'abnormal',gaugePos:20},
+        { item:'Calcium (Ca)',  unit:'mg/dL',values:['9.2','9.0','9.0','8.9','8.8','8.5'],      ref:'8.5–10.5',alert:'',        gaugePos:42},
+        { item:'Phosphorus (P)',unit:'mg/dL',values:['3.5','3.4','3.5','3.3','3.2','2.8 (L)'],  ref:'2.5–4.5', alert:'',        gaugePos:38},
+        { item:'Magnesium (Mg)',unit:'mg/dL',values:['2.0','1.9','1.9','1.8','1.8','1.5 (L)'],  ref:'1.7–2.2', alert:'abnormal',gaugePos:22},
+    ]},
+    { id:'HBA1C', group:'BloodChem', name:'HbA1C Historical Tracking',
+      doctor:'นพ.ชัยมงคล', today:false, reported:true, od:'15/12/25 10:00', cd:'10:15', rd:'14:20', isAbnormal:true,
+      collectTimes:['10:00','10:05','10:05','10:10','10:15','–'],
+      data:[
+        { item:'HbA1C', unit:'%', values:['6.5','6.8','7.2','7.0','7.5','-'], ref:'< 6.5', alert:'abnormal', gaugePos:72 },
+    ]},
+    { id:'THYROID', group:'Immunology', name:'Thyroid Function (TSH/FT3/FT4)',
+      doctor:'นพ.ชัยมงคล', today:true, reported:true, od:'08/03/26 09:08', cd:'09:25', rd:'13:00', isAbnormal:true,
+      collectTimes:['09:05','09:08','09:10','09:15','09:20','09:25'],
+      data:[
+        { item:'TSH',           unit:'mIU/L',values:['2.1','2.2','2.5','2.8','3.2','8.5 (H)'], ref:'0.4–4.0',alert:'critical',gaugePos:92},
+        { item:'Free T3 (FT3)', unit:'pg/mL',values:['3.2','3.1','3.0','2.9','2.8','2.4 (L)'], ref:'2.3–4.2',alert:'abnormal',gaugePos:20},
+        { item:'Free T4 (FT4)', unit:'ng/dL',values:['1.2','1.1','1.1','1.0','1.0','0.7 (L)'], ref:'0.8–1.8',alert:'abnormal',gaugePos:18},
+        { item:'Anti-TPO Ab',   unit:'IU/mL',values:['20','25','30','38','45','85 (H)'],         ref:'< 35',   alert:'critical',gaugePos:88},
+        { item:'Anti-TG Ab',    unit:'IU/mL',values:['15','18','20','22','25','42 (H)'],         ref:'< 40',   alert:'abnormal',gaugePos:72},
+    ]},
+    { id:'INFLAM', group:'Immunology', name:'Inflammatory Markers (CRP/ESR)',
+      doctor:'นพ.ชัยมงคล', today:true, reported:true, od:'08/03/26 09:18', cd:'09:35', rd:'12:30', isAbnormal:true,
+      collectTimes:['09:15','09:18','09:20','09:25','09:30','09:35'],
+      data:[
+        { item:'hs-CRP',        unit:'mg/L',  values:['2.5','3.0','3.5','4.0','5.0','18.5 (VH)'],   ref:'< 5.0',  alert:'critical',gaugePos:95},
+        { item:'ESR',           unit:'mm/hr', values:['12','14','16','18','20','42 (H)'],             ref:'0–15',   alert:'abnormal',gaugePos:80},
+        { item:'Ferritin',      unit:'ng/mL', values:['80','85','90','100','110','285 (H)'],          ref:'22–275', alert:'abnormal',gaugePos:78},
+        { item:'Procalcitonin', unit:'ng/mL', values:['0.05','0.05','0.06','0.07','0.08','0.55 (H)'],ref:'< 0.25', alert:'abnormal',gaugePos:80},
+    ]},
+    { id:'AUTOIMMUNE', group:'Immunology', name:'Autoimmune Panel (ANA/dsDNA)',
+      doctor:'พญ.นลินี', today:false, reported:true, od:'10/09/25 10:00', cd:'10:15', rd:'15:00', isAbnormal:true,
+      collectTimes:['–','–','–','10:15','–','–'],
+      data:[
+        { item:'ANA (IFA)',      unit:'titer', values:['Neg','Neg','Neg','1:80 (H)','-','-'],   ref:'< 1:40', alert:'abnormal',gaugePos:80},
+        { item:'Anti-dsDNA',    unit:'IU/mL', values:['< 10','< 10','< 10','12 (H)','-','-'],  ref:'< 10',   alert:'abnormal',gaugePos:70},
+        { item:'C3 Complement', unit:'mg/dL', values:['115','112','108','95 (L)','-','-'],      ref:'90–180', alert:'',        gaugePos:45},
+        { item:'C4 Complement', unit:'mg/dL', values:['22','21','20','16 (L)','-','-'],         ref:'16–47',  alert:'',        gaugePos:30},
+    ]},
+    { id:'UA', group:'Urinalysis', name:'Urinalysis Complete (UA)',
+      doctor:'พญ.นลินี', today:true, reported:true, od:'08/03/26 09:20', cd:'09:45', rd:'11:00', isAbnormal:true,
+      collectTimes:['09:20','09:22','09:25','09:30','09:38','09:45'],
+      data:[
+        { item:'Appearance',      unit:'-',       values:['Clear','Clear','Clear','Clear','Sl.Turbid','Turbid (A)'], ref:'Clear',       alert:'abnormal',gaugePos:72},
+        { item:'pH (Urine)',      unit:'-',       values:['6.0','6.0','6.5','6.5','7.0','5.5'],                     ref:'4.5–8.0',     alert:'',        gaugePos:45},
+        { item:'Specific Gravity',unit:'-',       values:['1.015','1.015','1.018','1.020','1.022','1.028 (H)'],     ref:'1.001–1.025', alert:'abnormal',gaugePos:78},
+        { item:'Protein (Urine)', unit:'mg/dL',   values:['Neg','Neg','Neg','Trace','Trace','2+ (H)'],              ref:'Negative',    alert:'critical',gaugePos:90},
+        { item:'Glucose (Urine)', unit:'-',       values:['Neg','Neg','Neg','Neg','Trace','1+ (H)'],                ref:'Negative',    alert:'abnormal',gaugePos:75},
+        { item:'Ketone',          unit:'-',       values:['Neg','Neg','Neg','Neg','Neg','Trace'],                   ref:'Negative',    alert:'',        gaugePos:40},
+        { item:'Occult Blood',    unit:'-',       values:['Neg','Neg','Neg','Neg','Trace','2+ (H)'],                ref:'Negative',    alert:'critical',gaugePos:88},
+        { item:'Nitrite',         unit:'-',       values:['Neg','Neg','Neg','Neg','Neg','Pos (H)'],                 ref:'Negative',    alert:'abnormal',gaugePos:80},
+        { item:'WBC (Urine)',     unit:'/HPF',    values:['0-1','0-1','0-2','1-2','2-3','8-12 (H)'],                ref:'0–5',         alert:'critical',gaugePos:90},
+        { item:'RBC (Urine)',     unit:'/HPF',    values:['0-1','0-1','0-1','0-1','1-2','5-8 (H)'],                 ref:'0–2',         alert:'abnormal',gaugePos:80},
+        { item:'Cast',            unit:'/LPF',    values:['0','0','0','0','0-1','2-3 (H)'],                         ref:'0–1 Hyaline', alert:'abnormal',gaugePos:72},
+        { item:'Micro-albumin',   unit:'mg/g Cr', values:['18','20','22','28','32','85 (H)'],                       ref:'< 30',        alert:'critical',gaugePos:88},
+    ]},
+    { id:'UCR', group:'Urinalysis', name:'Urine Creatinine & Electrolytes',
+      doctor:'พญ.นลินี', today:false, reported:true, od:'15/12/25 09:30', cd:'09:50', rd:'11:30', isAbnormal:false,
+      collectTimes:['09:40','09:42','09:44','09:46','09:50','–'],
+      data:[
+        { item:'Urine Creatinine',unit:'mg/dL',values:['85','88','90','92','95','-'], ref:'40–300',alert:'',gaugePos:45},
+        { item:'Urine Sodium',    unit:'mEq/L',values:['80','82','85','88','90','-'], ref:'40–220',alert:'',gaugePos:48},
+        { item:'Urine Potassium', unit:'mEq/L',values:['35','36','37','38','40','-'], ref:'25–125',alert:'',gaugePos:45},
+        { item:'Urine Protein/Cr',unit:'mg/g', values:['85','88','90','95','102','-'],ref:'< 150', alert:'',gaugePos:52},
+    ]},
+    { id:'CARDIAC', group:'CardiacMarker', name:'Cardiac Markers (Troponin/BNP)',
+      doctor:'นพ.ชัยมงคล', today:true, reported:true, od:'08/03/26 09:00', cd:'09:15', rd:'10:15', isAbnormal:true,
+      serial:true, serialLabel:'Troponin q3h', serialParamId:'troponin', serialInterval:'q 3h',
+      collectTimes:['08:50','08:55','09:00','09:05','09:10','09:15'],
+      data:[
+        { item:'Troponin I (hs)', unit:'ng/L',  values:['8','9','9','10','11','62 (H)'],        ref:'< 19',  alert:'critical',gaugePos:92},
+        { item:'Troponin T (hs)', unit:'ng/L',  values:['9','10','10','11','12','55 (H)'],      ref:'< 14',  alert:'critical',gaugePos:95},
+        { item:'CK-MB',           unit:'U/L',   values:['12','13','13','14','14','38 (H)'],     ref:'0–25',  alert:'abnormal',gaugePos:80},
+        { item:'BNP',             unit:'pg/mL', values:['45','50','55','60','68','185 (H)'],    ref:'< 100', alert:'abnormal',gaugePos:80},
+        { item:'NT-proBNP',       unit:'pg/mL', values:['280','310','340','380','420','950 (H)'],ref:'< 300',alert:'critical',gaugePos:90},
+        { item:'Myoglobin',       unit:'ng/mL', values:['42','45','45','48','50','85 (H)'],     ref:'< 72',  alert:'abnormal',gaugePos:75},
+    ]},
+    { id:'LIPASE', group:'CardiacMarker', name:'Pancreatic Enzymes (Amylase/Lipase)',
+      doctor:'พญ.นลินี', today:false, reported:true, od:'10/09/25 09:00', cd:'09:15', rd:'10:30', isAbnormal:true,
+      collectTimes:['–','–','–','09:15','–','–'],
+      data:[
+        { item:'Amylase',unit:'U/L',values:['55','58','60','82 (H)','-','-'],ref:'28–100',alert:'abnormal',gaugePos:75},
+        { item:'Lipase', unit:'U/L',values:['28','30','32','95 (H)','-','-'],ref:'13–60', alert:'critical',gaugePos:90},
+    ]},
+    { id:'CULTURE', group:'Microbiology', name:'Blood Culture & Sensitivity',
+      doctor:'นพ.ชัยมงคล', today:true, reported:false, od:'08/03/26 09:30', cd:'09:45', rd:'', isAbnormal:false,
+      collectTimes:['09:30','09:32','09:35','09:38','09:40','09:45'],
+      data:[
+        { item:'Aerobic Culture',  unit:'-',values:['No growth','No growth','No growth','No growth','No growth','Pending'],ref:'No growth',alert:'',gaugePos:50},
+        { item:'Anaerobic Culture',unit:'-',values:['No growth','No growth','No growth','No growth','No growth','Pending'],ref:'No growth',alert:'',gaugePos:50},
+    ]},
+    { id:'AFB', group:'Microbiology', name:'AFB Smear & Culture (Sputum)',
+      doctor:'พญ.นลินี', today:false, reported:true, od:'22/05/25 08:00', cd:'08:30', rd:'72hr', isAbnormal:true,
+      collectTimes:['–','–','08:30','–','–','–'],
+      data:[
+        { item:'AFB Smear',    unit:'-',values:['Neg','Neg','1+ (H)','-','-','-'],                  ref:'Negative',    alert:'critical',gaugePos:88},
+        { item:'AFB Culture',  unit:'-',values:['No growth','No growth','Positive (H)','-','-','-'],ref:'No growth',   alert:'critical',gaugePos:90},
+        { item:'GeneXpert MTB',unit:'-',values:['Neg','Neg','Detected (H)','-','-','-'],            ref:'Not detected',alert:'critical',gaugePos:92},
+    ]},
+];
+
+// ═══════════════════════════════════════════════════════
+// CHART.JS PLUGINS
+// ═══════════════════════════════════════════════════════
+const refRangePlugin = {
+    id:'refRangeShade',
+    beforeDatasetsDraw(chart) {
+        const rr = chart.config._refRange;
+        if (!rr) return;
+        const {ctx,chartArea,scales} = chart;
+        const ys = scales.y;
+        ctx.save();
+        const yA = rr.min!=null ? ys.getPixelForValue(rr.min) : chartArea.bottom;
+        const yB = rr.max!=null ? ys.getPixelForValue(rr.max) : chartArea.top;
+        const top = Math.max(Math.min(yA,yB), chartArea.top);
+        const bot = Math.min(Math.max(yA,yB), chartArea.bottom);
+        ctx.fillStyle = 'rgba(220,252,231,0.42)';
+        ctx.fillRect(chartArea.left, top, chartArea.right-chartArea.left, bot-top);
+        ctx.strokeStyle = 'rgba(22,163,74,0.3)';
+        ctx.setLineDash([4,4]); ctx.lineWidth=1;
+        [rr.max,rr.min].forEach(v => {
+            if(v==null) return;
+            const y = ys.getPixelForValue(v);
+            if(y<chartArea.top||y>chartArea.bottom) return;
+            ctx.beginPath(); ctx.moveTo(chartArea.left,y); ctx.lineTo(chartArea.right,y); ctx.stroke();
+        });
+        if(rr.label){ ctx.fillStyle='rgba(22,163,74,.55)'; ctx.font='8px Sarabun,sans-serif'; ctx.setLineDash([]); ctx.fillText('ค่าปกติ: '+rr.label, chartArea.left+5, top-4); }
+        ctx.restore();
+    }
+};
+
+const medLinesPlugin = {
+    id:'medLines',
+    afterDraw(chart) {
+        const {ctx,chartArea,scales} = chart;
+        const xs = scales.x;
+        medicationEvents.forEach(evt => {
+            const idx = clinicalDates.indexOf(evt.dateLabel);
+            if(idx<0) return;
+            const x = xs.getPixelForValue(idx);
+            if(x<chartArea.left||x>chartArea.right) return;
+            ctx.save();
+            ctx.strokeStyle = evt.color+'99'; ctx.setLineDash([5,3]); ctx.lineWidth=1.5;
+            ctx.beginPath(); ctx.moveTo(x,chartArea.top); ctx.lineTo(x,chartArea.bottom); ctx.stroke();
+            const lbl = evt.shortLabel;
+            ctx.font='bold 7.5px Sarabun,sans-serif';
+            const tw = ctx.measureText(lbl).width+8;
+            ctx.fillStyle=evt.color; ctx.setLineDash([]);
+            ctx.beginPath(); if(ctx.roundRect){ctx.roundRect(x+1,chartArea.top,tw,13,2);}else{ctx.rect(x+1,chartArea.top,tw,13);} ctx.fill();
+            ctx.fillStyle='white'; ctx.fillText(lbl,x+5,chartArea.top+9.5);
+            ctx.restore();
+        });
+    }
+};
+Chart.register(refRangePlugin, medLinesPlugin);
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+const CHART_COLORS = ['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2','#be185d','#65a30d'];
+
+// Get latest numeric value
+function n(labs, labId, itemName) {
+    const lab  = labs.find(l=>l.id===labId); if(!lab) return null;
+    const item = lab.data.find(d=>d.item===itemName); if(!item) return null;
+    const v = parseFloat(item.values[5]); return isNaN(v)?null:v;
+}
+
+// Format evidence string; spec = "labId:item:threshold:unit"
+function ev4(labs, specs) {
+    return specs.map(s=>{
+        const [lid,itm,,unit] = s.split(':');
+        const lab  = labs.find(l=>l.id===lid); if(!lab) return null;
+        const item = lab.data.find(d=>d.item===itm); if(!item) return null;
+        const v = item.values[5]; if(!v||v==='-') return null;
+        return `${itm} = ${v} (${unit})`;
+    }).filter(Boolean).join('  ·  ');
+}
+
+// Parse reference range string
+function parseRef(str){
+    if(!str) return null;
+    const range=str.match(/(\d+\.?\d*)\s*[–\-]\s*(\d+\.?\d*)/);
+    if(range) return {min:parseFloat(range[1]),max:parseFloat(range[2]),label:str};
+    const lt=str.match(/[<≤]\s*(\d+\.?\d*)/); if(lt) return {min:0,max:parseFloat(lt[1]),label:str};
+    const gt=str.match(/[>≥]\s*(\d+\.?\d*)/); if(gt) return {min:parseFloat(gt[1]),max:null,label:str};
+    return null;
+}
+
+// Delta badge — clinical notation: HH/H/L/LL + % change
+function deltaBadge(v5,v4){
+    const now=parseFloat(v5), prev=parseFloat(v4);
+    if(isNaN(now)||isNaN(prev)||prev===0) return '';
+    const pct=((now-prev)/prev)*100, abs=Math.abs(pct);
+    if(abs<5) return '';
+    const up=pct>0;
+    let cls,lbl;
+    if(abs>100){ cls=up?'delta-alarm-up':'delta-alarm-dn'; lbl=up?'HH':'LL'; }
+    else if(abs>50){ cls=up?'delta-high-up':'delta-high-dn'; lbl=up?'H↑↑':'L↓↓'; }
+    else if(abs>20){ cls=up?'delta-mid-up':'delta-mid-dn';   lbl=up?'H↑':'L↓';   }
+    else {           cls=up?'delta-low-up':'delta-low-dn';   lbl=up?'↑':'↓';      }
+    return `<span class="delta-badge ${cls}">${lbl} ${pct>0?'+':''}${pct.toFixed(0)}%</span>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let pinnedIds=[], previewId=null, currentView='table', activeCharts=[], insightsOpen=true;
+
+// ═══════════════════════════════════════════════════════
+// RENDER LIST
+// ═══════════════════════════════════════════════════════
+function renderList(){
+    const showAll=document.getElementById('toggleShowAll').checked;
+    const filter=document.getElementById('groupFilter').value;
+    const container=document.getElementById('orderList');
+    container.innerHTML='';
+    const groups=[...new Set(allLabs.map(l=>l.group))];
+    groups.forEach(g=>{
+        const labs=allLabs.filter(l=>l.group===g&&(showAll||l.today)&&(filter==='ALL'||l.group===filter));
+        if(!labs.length) return;
+        const hdr=document.createElement('div'); hdr.className='group-header uppercase shadow-sm'; hdr.innerText=g;
+        container.appendChild(hdr);
+        labs.forEach(lab=>{
+            const isPinned=pinnedIds.includes(lab.id), isPreview=previewId===lab.id;
+            const envIcon=lab.reported?(lab.isAbnormal?'fa-envelope-open text-orange-400':'fa-envelope-open text-green-500'):'';
+            const isSerial=lab.serial&&lab.today;
+            const readings=isSerial?(serialReadings[lab.serialParamId]||[]):[];
+            const hasCrit=readings.some(r=>r.crit);
+            const lastReading=readings.filter(r=>r.val!=null).slice(-1)[0];
+            const pendingNext=readings.find(r=>r.pending);
+
+            // Serial mini-dots
+            let serialBlock='';
+            if(isSerial){
+                const dots=readings.map(r=>{
+                    if(r.pending) return `<span class="serial-dot" style="opacity:.45;border-style:dashed;"><span class="sd-time">${r.time||''}</span><span class="sd-val" style="color:#94a3b8;font-size:8px;">?</span></span>`;
+                    const cls=serialCls(lab,r.val);
+                    const extra=r.ins?`<span style="font-size:7px;color:#7c3aed;font-weight:900;">${r.ins}</span>`:'';
+                    return `<span class="serial-dot ${cls}"><span class="sd-time">${r.time}</span><span class="sd-val">${r.val}</span>${extra}</span>`;
+                }).join('');
+                serialBlock=`<div class="serial-readings-row">
+                    <span style="font-size:7.5px;color:#0d9488;font-weight:900;letter-spacing:.03em;flex-shrink:0;">${lab.serialInterval}</span>
+                    ${dots}
+                    ${pendingNext?`<span style="font-size:7.5px;color:#d97706;font-weight:900;">⏳ รอ ${pendingNext.time}</span>`:''}
+                </div>`;
+            }
+
+            const el=document.createElement('div');
+            el.className=`lab-item-compact flex gap-3 items-center
+                ${!lab.today?'history-item':''}
+                ${isSerial&&lab.today?'serial-item':''}
+                ${isPreview?(isSerial?'active-preview serial-item':'active-preview'):''}
+                ${isPinned&&!isPreview?(isSerial?'bg-teal-50 border-l-4 border-teal-600':'bg-blue-50 border-l-4 border-blue-600'):''}
+                hover:bg-slate-50 cursor-pointer transition-all`;
+
+            el.innerHTML=`
+                <input type="checkbox" ${isPinned?'checked':''} onchange="togglePinned(event,'${lab.id}')" class="h-3.5 w-3.5 rounded border-slate-300 flex-shrink-0">
+                <div class="flex-1 min-w-0" onclick="setPreview('${lab.id}')">
+                    <div class="flex flex-row justify-between items-start mb-1">
+                        <div class="flex items-center gap-1 overflow-hidden flex-wrap">
+                            <span class="font-bold text-slate-800 truncate text-[11px] uppercase tracking-tight">${lab.name}</span>
+                            <span class="badge-status ${lab.today?'badge-today':'badge-history'}">${lab.today?'TODAY':'HISTORY'}</span>
+                            ${isSerial?`<span class="badge-serial" title="Lab สั่ง ${lab.serialInterval} — ดูค่าครบที่ MONITOR">⟳ ${lab.serialInterval}${hasCrit?' ⚠':''} → MONITOR</span>`:''}
+                        </div>
+                        <div class="flex items-center gap-1.5 shrink-0 ml-2" style="min-width:100px;justify-content:flex-end;">
+                            <span class="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded border border-blue-100">${lab.doctor}</span>
+                            ${envIcon?`<i onclick="openEnvelope(event,'${lab.id}')" class="fa-solid ${envIcon} text-[14px] cursor-pointer"></i>`:''}
+                        </div>
+                    </div>
+                    <div class="timeline-mini">
+                        <span class="time-node">O: ${lab.od.split(' ')[0]}</span>
+                        <span class="time-node cd-focus">C: ${lab.cd}</span>
+                        ${lab.reported?`<span class="time-node font-bold">R: ${lab.rd}</span>`:''}
+                    </div>
+                    ${serialBlock}
+                </div>`;
+            container.appendChild(el);
+        });
+    });
+}
+
+function setPreview(id){ previewId=(previewId===id)?null:id; renderView(); renderList(); }
+function togglePinned(e,id){ e.stopPropagation(); pinnedIds=pinnedIds.includes(id)?pinnedIds.filter(i=>i!==id):[...pinnedIds,id]; renderView(); renderList(); }
+
+// ═══════════════════════════════════════════════════════
+// RENDER TABLE (with Delta)
+// ═══════════════════════════════════════════════════════
+function renderView(){
+    const body=document.getElementById('comparisonBody');
+    const empty=document.getElementById('emptyState');
+    let ids=[...pinnedIds];
+    if(previewId&&!pinnedIds.includes(previewId)) ids.push(previewId);
+    body.innerHTML='';
+    if(!ids.length){ empty.style.display='flex'; hideInsights(); return; }
+    empty.style.display='none';
+    const visLabs=allLabs.filter(l=>ids.includes(l.id));
+    detectAndShowPatterns(visLabs);
+    updateMonitorAlertDot();
+
+    visLabs.forEach(lab=>{
+        // Collect-time sub-row
+        const ct=lab.collectTimes||['–','–','–','–','–','–'];
+        const sr=document.createElement('tr'); sr.className='collect-sub-row';
+        sr.innerHTML=`
+            <td class="sticky-left text-left" style="padding-left:16px !important;">
+                <span class="collect-label">🩸 ${lab.name} — Collect Time</span>
+            </td>
+            <td class="border-l text-center"><span class="collect-time collect-time-today">${ct[5]}</span></td>
+            <td class="border-l text-center"><span class="${ct[4]!=='–'?'collect-time':'collect-na'}">${ct[4]}</span></td>
+            <td class="border-l text-center"><span class="${ct[3]!=='–'?'collect-time':'collect-na'}">${ct[3]}</span></td>
+            <td class="border-l text-center"><span class="${ct[2]!=='–'?'collect-time':'collect-na'}">${ct[2]}</span></td>
+            <td class="border-l text-center"><span class="${ct[1]!=='–'?'collect-time':'collect-na'}">${ct[1]}</span></td>
+            <td class="border-l text-center"><span class="${ct[0]!=='–'?'collect-time':'collect-na'}">${ct[0]}</span></td>
+            <td class="border-l"></td>`;
+        body.appendChild(sr);
+
+        // ── SERIAL STRIP ROW (only for serial labs) ─────────────
+        if(lab.serial && lab.today) {
+            const readings = serialReadings[lab.serialParamId]||[];
+            const cells = readings.map((r,i)=>{
+                if(r.pending) return `
+                    <div class="serial-strip-cell" style="opacity:.4;border-style:dashed;">
+                        <span class="ssc-time">${r.time||r.label||'?'}</span>
+                        <span class="ssc-val" style="color:#94a3b8;font-size:9px;">⏳</span>
+                    </div>`;
+                const cls = lab.serialParamId==='cbg' ? serialCls({serialParamId:'cbg'},r.val) : (r.crit?'crit':'hi');
+                const isNow = i===readings.filter(x=>!x.pending).length-1;
+                const insChip = r.ins ? `<span class="ssc-ins">💉 ${r.ins}</span>` : '';
+                const label = r.label ? `<span class="ssc-time" style="color:#7c3aed;">${r.label}</span>` : '';
+                return `
+                    <div class="serial-strip-cell ${cls} ${isNow?'now':''}">
+                        <span class="ssc-time">${r.time||''}</span>
+                        ${label}
+                        <span class="ssc-val ${cls}">${r.val}</span>
+                        ${insChip}
+                        ${isNow?'<span class="ssc-trend">← Latest</span>':''}
+                    </div>`;
+            }).join('');
+
+            const hasCrit = readings.some(r=>r.crit);
+            const pendingNext = readings.find(r=>r.pending);
+            const stripRow = document.createElement('tr'); stripRow.className='serial-strip-row';
+            stripRow.innerHTML=`
+                <td class="sticky-left text-left" style="padding-left:16px !important; border-right:2px solid #0d9488;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:8.5px;font-weight:900;color:#0d9488;text-transform:uppercase;letter-spacing:.08em;">⟳ Serial: ${lab.serialLabel}</span>
+                        ${hasCrit?'<span style="font-size:7.5px;background:#dc2626;color:white;padding:1px 5px;border-radius:10px;font-weight:900;">⚠ CRITICAL</span>':''}
+                    </div>
+                    ${pendingNext?`<div style="font-size:7.5px;color:#d97706;font-weight:700;margin-top:2px;">⏳ ครั้งถัดไป ${pendingNext.time}</div>`:''}
+                </td>
+                <td colspan="7" style="padding:5px 10px !important;">
+                    <div class="serial-strip-inner">${cells}</div>
+                </td>`;
+            body.appendChild(stripRow);
+        }
+
+        // Data rows + delta every column
+        lab.data.forEach(row=>{
+            const v=row.values; // [0]=oldest … [5]=today
+            const d5=deltaBadge(v[5],v[4]);
+            const d4=deltaBadge(v[4],v[3]);
+            const d3=deltaBadge(v[3],v[2]);
+            const d2=deltaBadge(v[2],v[1]);
+            const d1=deltaBadge(v[1],v[0]);
+            const tr=document.createElement('tr');
+            tr.className='hover:bg-slate-50 transition-colors text-center';
+            tr.innerHTML=`
+                <td class="p-2 sticky-left font-bold border-r bg-white text-left text-slate-700 text-[10.5px] leading-tight">${row.item} <span class="text-[8.5px] text-slate-400 font-normal">(${row.unit})</span></td>
+                <td class="border-l bg-blue-50/10 ${row.alert} whitespace-nowrap">${v[5]}${d5}</td>
+                <td class="border-l whitespace-nowrap">${v[4]}${d4}</td>
+                <td class="border-l whitespace-nowrap">${v[3]}${d3}</td>
+                <td class="border-l whitespace-nowrap">${v[2]}${d2}</td>
+                <td class="border-l whitespace-nowrap">${v[1]}${d1}</td>
+                <td class="border-l">${v[0]}</td>
+                <td class="border-l font-bold text-[10px]">${row.ref}</td>`;
+            body.appendChild(tr);
+        });
+    });
+    if(currentView==='graph') updateGraphs();
+}
+
+// ═══════════════════════════════════════════════════════
+// CLINICAL PATTERN DETECTION
+// ═══════════════════════════════════════════════════════
+function detectAndShowPatterns(visLabs){
+    const triggered=PATTERNS.filter(p=>{ try{return p.check(visLabs);}catch(e){return false;} });
+    if(!triggered.length){ hideInsights(); return; }
+
+    const panel=document.getElementById('insightsPanel');
+    const body_el=document.getElementById('insightBody');
+    const badge=document.getElementById('insightsBadge');
+    const crit=triggered.filter(p=>p.severity==='critical').length;
+
+    panel.classList.remove('hidden');
+    badge.textContent=`${triggered.length} pattern${triggered.length>1?'s':''} detected${crit>0?' · '+crit+' CRITICAL':''}`;
+    badge.className=`text-[9px] font-black px-2 py-0.5 rounded-full ${crit>0?'bg-red-100 text-red-700':'bg-amber-100 text-amber-700'}`;
+    body_el.innerHTML='';
+    if(!insightsOpen){ body_el.style.display='none'; return; }
+    body_el.style.display='';
+
+    triggered.forEach(p=>{
+        const sevClass=p.severity==='critical'?'sev-critical':'sev-warning';
+        const tc=p.severity==='critical'?'text-red-700':'text-amber-700';
+        const div=document.createElement('div'); div.className=`insight-item ${sevClass}`;
+        div.innerHTML=`
+            <div class="insight-title ${tc}">
+                <span>${p.icon}</span><span>${p.title}</span>
+                ${p.severity==='critical'?'<span class="text-[8px] bg-red-600 text-white px-2 py-0.5 rounded-full font-black ml-1">CRITICAL</span>':''}
+            </div>
+            <div class="insight-ev">${p.ev(visLabs)||'—'}</div>
+            <div class="insight-action">
+                <i class="fa-solid fa-angles-right text-slate-400 mt-0.5 text-[9px] shrink-0"></i>
+                <span>${p.action}</span>
+            </div>`;
+        body_el.appendChild(div);
+    });
+}
+
+function hideInsights(){ document.getElementById('insightsPanel').classList.add('hidden'); }
+function toggleInsights(){
+    insightsOpen=!insightsOpen;
+    document.getElementById('insightBody').style.display=insightsOpen?'':'none';
+    document.getElementById('insightsChevron').style.transform=insightsOpen?'':'rotate(-90deg)';
+}
+
+// ═══════════════════════════════════════════════════════
+// GRAPH VIEW
+// ═══════════════════════════════════════════════════════
+function switchView(mode){
+    currentView=mode;
+    const views=['tableView','graphView','monitorView'];
+    views.forEach(v=>document.getElementById(v).classList.toggle('hidden', v!==mode+'View'));
+    // Empty state: hide when monitorView is active (standalone data)
+    document.getElementById('emptyState').style.display='none';
+    // Button active state
+    ['btnTable','btnGraph','btnMonitor'].forEach(b=>{
+        const btn=document.getElementById(b);
+        const isActive=(b==='btn'+mode.charAt(0).toUpperCase()+mode.slice(1));
+        btn.className=`px-4 py-1 text-[10px] rounded-lg font-bold transition-all ${isActive?'bg-white shadow-sm text-slate-900':'text-slate-500 hover:text-slate-700'}`;
+        if(b==='btnMonitor') btn.innerHTML=`<i class="fa-solid fa-heart-pulse ${isActive?'text-rose-500':'text-slate-400'}"></i> MONITOR`;
+    });
+    if(mode==='graph')   updateGraphs();
+    if(mode==='monitor') initFlowsheet();
+    // Show empty state only for table/graph when no labs selected
+    if(mode!=='monitor'){
+        let ids=[...pinnedIds]; if(previewId&&!pinnedIds.includes(previewId)) ids.push(previewId);
+        if(!ids.length) document.getElementById('emptyState').style.display='flex';
+    }
+}
+
+function updateGraphs(){
+    const container=document.getElementById('graphStack');
+    container.innerHTML='';
+    activeCharts.forEach(c=>c.destroy()); activeCharts=[];
+    let ids=[...pinnedIds];
+    if(previewId&&!pinnedIds.includes(previewId)) ids.push(previewId);
+    if(!ids.length) return;
+
+    buildMedBar();
+    const visLabs=allLabs.filter(l=>ids.includes(l.id)&&l.reported);
+
+    visLabs.forEach(lab=>{
+        const groups=clinicalGraphGroups[lab.id]||[{title:lab.name,color:'#2563eb',items:lab.data.map(d=>d.item)}];
+        const sep=document.createElement('div');
+        sep.className='text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 mt-3 px-1';
+        sep.textContent=`── ${lab.name} ──`;
+        container.appendChild(sep);
+
+        groups.forEach((grp,gi)=>{
+            const items=grp.items.map(nm=>lab.data.find(d=>d.item===nm)).filter(Boolean);
+            if(!items.length) return;
+
+            const wrap=document.createElement('div'); wrap.className='graph-stack-item';
+
+            const btns=items.map((it,ci)=>{
+                const c=CHART_COLORS[ci%CHART_COLORS.length];
+                return `<button class="gtb on" id="gtb-${lab.id}-${gi}-${ci}"
+                    style="color:${c};border-color:${c};background:${c};"
+                    onclick="toggleDs('chart-${lab.id}-${gi}',${ci},this,'${c}')">
+                    ${it.item}
+                </button>`;
+            }).join('');
+
+            wrap.innerHTML=`
+                <div class="graph-group-label" style="color:${grp.color};border-color:${grp.color}44;">
+                    <span>${grp.title}</span>
+                    <div class="graph-toggles">${btns}</div>
+                </div>
+                <div class="graph-canvas-wrap"><canvas id="chart-${lab.id}-${gi}"></canvas></div>`;
+            container.appendChild(wrap);
+
+            const datasets=items.map((it,ci)=>({
+                label:it.item,
+                data:it.values.map(v=>{const n=parseFloat(v);return isNaN(n)?null:n;}),
+                borderColor:CHART_COLORS[ci%CHART_COLORS.length],
+                backgroundColor:CHART_COLORS[ci%CHART_COLORS.length]+'28',
+                borderWidth:2.5, pointRadius:4.5, pointHoverRadius:7,
+                tension:.35, spanGaps:true,
+            }));
+
+            const rr=parseRef(items[0].ref);
+            const ch=new Chart(document.getElementById(`chart-${lab.id}-${gi}`).getContext('2d'),{
+                type:'line',
+                data:{labels:clinicalDates,datasets},
+                _refRange:rr,
+                options:{
+                    maintainAspectRatio:false,
+                    interaction:{mode:'index',intersect:false},
+                    plugins:{
+                        legend:{display:false},
+                        tooltip:{callbacks:{
+                            afterTitle:()=>rr?`Ref (${items[0].item}): ${items[0].ref}`:'',
+                        }}
+                    },
+                    scales:{
+                        x:{grid:{color:'#f1f5f9'},ticks:{font:{size:9}}},
+                        y:{grid:{color:'#f1f5f9'},ticks:{font:{size:9}}}
+                    }
+                }
+            });
+            activeCharts.push(ch);
+        });
+    });
+}
+
+function toggleDs(chartId,dsIdx,btn,color){
+    const ch=activeCharts.find(c=>c.canvas.id===chartId); if(!ch) return;
+    const meta=ch.getDatasetMeta(dsIdx);
+    meta.hidden=!meta.hidden;
+    btn.classList.toggle('on');
+    btn.style.backgroundColor=meta.hidden?'':color;
+    btn.style.color=meta.hidden?color:'white';
+    ch.update();
+}
+
+function buildMedBar(){
+    const bar=document.getElementById('medBar');
+    bar.innerHTML=`<span class="med-bar-title"><i class="fa-solid fa-pills mr-1 opacity-60"></i>Medication Timeline</span>`;
+    medicationEvents.forEach(evt=>{
+        const chip=document.createElement('span');
+        chip.className='med-chip';
+        chip.style.cssText=`background:${evt.color}15;border-color:${evt.color}55;color:${evt.color};`;
+        chip.innerHTML=`<span>${evt.type==='start'?'▶':'↑'}</span><b>${evt.dateLabel}</b><span>${evt.label}</span>`;
+        bar.appendChild(chip);
+    });
+    bar.classList.remove('hidden');
+}
+
+// ═══════════════════════════════════════════════════════
+// ORIGINAL FUNCTIONS (preserved)
+// ═══════════════════════════════════════════════════════
+function openDashboard(){
+    const grid=document.getElementById('dashboardGrid');
+    grid.innerHTML='';
+    document.getElementById('patientDashboard').style.display='block';
+    allLabs.filter(l=>l.today).forEach(lab=>{
+        lab.data.forEach(item=>{
+            const sc=item.alert==='critical'?'#dc2626':(item.alert==='abnormal'?'#d97706':'#16a34a');
+            const st=item.alert==='critical'?'วิกฤต':(item.alert==='abnormal'?'ผิดปกติ':'ปกติ');
+            const bc=item.alert==='critical'?'bg-red-50 text-red-600':(item.alert==='abnormal'?'bg-orange-50 text-orange-600':'bg-green-50 text-green-600');
+            const card=document.createElement('div'); card.className='lab-card';
+            card.innerHTML=`
+                <div>
+                    <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">${lab.group}</div>
+                    <div class="flex justify-between items-start mt-1">
+                        <span class="text-sm font-black text-slate-800 leading-tight">${item.item}</span>
+                        <span class="${bc} text-[8px] px-2 py-0.5 rounded-full font-bold shrink-0">${st}</span>
+                    </div>
+                </div>
+                <div class="gauge-container">
+                    <svg viewBox="0 0 100 55" class="w-full">
+                        <path d="M 10 50 A 40 40 0 0 1 90 50" class="gauge-bg"/>
+                        <line x1="50" y1="50" x2="50" y2="10" class="gauge-needle"
+                              style="transform-origin:50px 50px;transform:rotate(${(item.gaugePos||50)-90}deg);stroke:${sc};"/>
+                    </svg>
+                    <div class="absolute bottom-0 inset-x-0 text-center">
+                        <div class="text-3xl font-black leading-none" style="color:${sc}">${item.values[5]}</div>
+                        <div class="text-[9px] text-slate-400 font-bold mt-1 uppercase">${item.unit} (ปกติ: ${item.ref})</div>
+                    </div>
+                </div>
+                <div class="text-[10px] text-slate-500 border-t pt-3 flex gap-2">
+                    <i class="fa-solid fa-circle-info mt-0.5 opacity-50"></i>
+                    <span>${item.alert==='critical'?'พบความผิดปกติในระดับสูง ควรปรึกษาแพทย์ทันที':'ค่าอยู่ในเกณฑ์ที่ต้องเฝ้าระวังและติดตามผล'}</span>
+                </div>`;
+            grid.appendChild(card);
+        });
+    });
+}
+
+function closeDashboard(){ document.getElementById('patientDashboard').style.display='none'; }
+
+function openEnvelope(e,id){
+    e.stopPropagation();
+    const lab=allLabs.find(l=>l.id===id);
+    document.getElementById('dialogContent').innerHTML=`
+        <div class="flex justify-between border-b pb-4 mb-4">
+            <h4 class="text-lg font-black text-slate-900 uppercase underline decoration-blue-500 decoration-4 underline-offset-8">${lab.name}</h4>
+            <div class="text-right text-[10px] font-mono">ORDER: ${lab.od}<br>COLLECT: ${lab.cd}<br>RES: FINAL</div>
+        </div>
+        <table class="w-full text-xs">
+            <thead><tr class="bg-slate-900 text-slate-300 font-black">
+                <td class="p-2">Analysis</td><td class="p-2 text-center">Result</td><td class="p-2 text-center">Ref. Range</td>
+            </tr></thead>
+            <tbody>${lab.data.map(d=>`
+                <tr>
+                    <td class="p-3 border-b font-bold">${d.item}</td>
+                    <td class="p-3 border-b text-center font-black ${d.alert}">${d.values[5]||d.values[4]}</td>
+                    <td class="p-3 border-b text-center text-slate-400 italic">${d.ref}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    document.getElementById('resultDialog').classList.remove('hidden');
+}
+
+function closeDialog(){ document.getElementById('resultDialog').classList.add('hidden'); }
+
+// ═══════════════════════════════════════════════════════
+// MONITORING FLOWSHEET DATA
+// ═══════════════════════════════════════════════════════
+const fsDays = ['06/03/26','07/03/26','08/03/26'];
+let fsActiveDay = '08/03/26';
+
+const fsParams = [
+    { group:'Vital Signs',   id:'temp', label:'Temp',        unit:'°C',       refLow:36.5,refHigh:37.5, critLow:35,   critHigh:39.5,dec:1,color:'#ea580c' },
+    { group:'Vital Signs',   id:'sbp',  label:'BP Systolic', unit:'mmHg',     refLow:90,  refHigh:140,  critLow:80,   critHigh:180, dec:0,color:'#dc2626' },
+    { group:'Vital Signs',   id:'dbp',  label:'BP Diastolic',unit:'mmHg',     refLow:60,  refHigh:90,   critLow:50,   critHigh:120, dec:0,color:'#f87171' },
+    { group:'Vital Signs',   id:'hr',   label:'Heart Rate',  unit:'bpm',      refLow:60,  refHigh:100,  critLow:40,   critHigh:150, dec:0,color:'#be185d' },
+    { group:'Vital Signs',   id:'rr',   label:'Resp Rate',   unit:'/min',     refLow:12,  refHigh:20,   critLow:8,    critHigh:30,  dec:0,color:'#7c3aed' },
+    { group:'Vital Signs',   id:'spo2', label:'SpO₂',        unit:'%',        refLow:95,  refHigh:100,  critLow:90,   critHigh:null,dec:0,color:'#0891b2' },
+    { group:'Blood Glucose', id:'cbg',  label:'CBG',         unit:'mg/dL',    refLow:70,  refHigh:180,  critLow:60,   critHigh:400, dec:0,color:'#d97706' },
+    { group:'Blood Glucose', id:'ins',  label:'Insulin given',unit:'Units SC',refLow:null,refHigh:null, critLow:null, critHigh:null,dec:0,color:'#7c3aed',isInsulin:true },
+    { group:'Fluid Balance', id:'uo',   label:'Urine Output',unit:'mL/4h',    refLow:100, refHigh:null, critLow:50,   critHigh:null,dec:0,color:'#16a34a' },
+    { group:'Fluid Balance', id:'iv',   label:'IV Fluid In', unit:'mL/4h',    refLow:null,refHigh:null, critLow:null, critHigh:null,dec:0,color:'#2563eb',isFluid:true },
+];
+
+const fsData = {
+    '06/03/26': {
+        temp:{ 6:37.1,10:37.4,14:38.2,18:38.8,22:38.5,2:38.1 },
+        sbp: { 6:128, 10:132, 14:138, 18:142, 22:138, 2:130  },
+        dbp: { 6:78,  10:80,  14:85,  18:88,  22:84,  2:80   },
+        hr:  { 6:76,  10:80,  14:88,  18:96,  22:92,  2:84   },
+        rr:  { 6:16,  10:17,  14:18,  18:20,  22:19,  2:17   },
+        spo2:{ 6:97,  10:97,  14:96,  18:95,  22:96,  2:97   },
+        cbg: { 6:118, 10:145, 14:168, 18:152, 22:140, 2:132  },
+        ins: { 6:'4u',10:'6u',14:'6u',18:'4u',22:'4u',2:'2u' },
+        uo:  { 6:220, 10:180, 14:160, 18:140, 22:120, 2:110  },
+        iv:  { 6:250, 10:250, 14:250, 18:250, 22:250, 2:250  },
+    },
+    '07/03/26': {
+        temp:{ 6:38.0,10:38.6,14:39.1,18:39.4,22:39.2,2:38.9 },
+        sbp: { 6:122, 10:118, 14:112, 18:108, 22:114, 2:118  },
+        dbp: { 6:76,  10:72,  14:68,  18:65,  22:70,  2:74   },
+        hr:  { 6:92,  10:102, 14:112, 18:118, 22:110, 2:98   },
+        rr:  { 6:18,  10:22,  14:24,  18:26,  22:22,  2:20   },
+        spo2:{ 6:96,  10:94,  14:92,  18:91,  22:93,  2:95   },
+        cbg: { 6:165, 10:210, 14:248, 18:225, 22:198, 2:172  },
+        ins: { 6:'6u',10:'8u',14:'10u',18:'8u',22:'8u',2:'6u'},
+        uo:  { 6:180, 10:140, 14:95,  18:80,  22:72,  2:65   },
+        iv:  { 6:250, 10:300, 14:300, 18:300, 22:300, 2:250  },
+    },
+    '08/03/26': {
+        temp:{ 6:38.7,10:38.9,14:39.3,18:null,22:null,2:null },
+        sbp: { 6:110, 10:105, 14:98,  18:null,22:null,2:null },
+        dbp: { 6:68,  10:64,  14:60,  18:null,22:null,2:null },
+        hr:  { 6:108, 10:118, 14:128, 18:null,22:null,2:null },
+        rr:  { 6:22,  10:24,  14:28,  18:null,22:null,2:null },
+        spo2:{ 6:93,  10:91,  14:89,  18:null,22:null,2:null },
+        cbg: { 6:198, 10:245, 14:312, 18:null,22:null,2:null },
+        ins: { 6:'8u',10:'10u',14:'12u',18:null,22:null,2:null},
+        uo:  { 6:95,  10:72,  14:48,  18:null,22:null,2:null },
+        iv:  { 6:300, 10:300, 14:300, 18:null,22:null,2:null },
+    },
+};
+
+// ── SERIAL READINGS (today's time-series per lab) ────────
+// key = lab.serialParamId, value = array of {time, val, ins?}
+const serialReadings = {
+    cbg: [
+        { time:'06:00', val:198,  ins:'8u'  },
+        { time:'10:00', val:245,  ins:'10u' },
+        { time:'14:00', val:312,  ins:'12u', crit:true },
+        // next readings pending
+    ],
+    troponin: [
+        { time:'09:15', val:62,   label:'TnI',  crit:true  },
+        { time:'12:15', val:88,   label:'TnI',  crit:true  },
+        { time:'15:15', val:null, label:'TnI',  pending:true },
+    ],
+};
+
+// Classify a serial value for strip display
+function serialCls(lab, val) {
+    if(val===null||val===undefined) return 'ok';
+    const param = fsParams.find(p=>p.id===lab.serialParamId);
+    if(!param) return 'ok';
+    if(param.critHigh!==null && val>=param.critHigh) return 'crit';
+    if(param.critLow!==null  && val<=param.critLow)  return 'crit';
+    if(param.refHigh!==null  && val>param.refHigh)   return 'hi';
+    if(param.refLow!==null   && val<param.refLow)    return 'lo';
+    return 'ok';
+}
+
+// Check if any serial lab has unread/critical readings today
+function updateMonitorAlertDot() {
+    let hasCrit = false;
+    allLabs.filter(l=>l.serial&&l.today).forEach(lab=>{
+        const readings = serialReadings[lab.serialParamId]||[];
+        if(readings.some(r=>r.crit || (r.val!==null&&r.val!==undefined))) hasCrit=true;
+    });
+    const dot=document.getElementById('monitorAlertDot');
+    if(dot) dot.classList.toggle('hidden', !hasCrit);
+}
+
+const FS_SLOTS_4H=[{h:6,l:'06:00'},{h:10,l:'10:00'},{h:14,l:'14:00'},{h:18,l:'18:00'},{h:22,l:'22:00'},{h:2,l:'02:00↑'}];
+const FS_SLOTS_2H=[{h:6,l:'06'},{h:8,l:'08'},{h:10,l:'10'},{h:12,l:'12'},{h:14,l:'14'},{h:16,l:'16'},{h:18,l:'18'},{h:20,l:'20'},{h:22,l:'22'},{h:0,l:'00↑'},{h:2,l:'02↑'},{h:4,l:'04↑'}];
+const FS_SLOTS_1H=Array.from({length:24},(_,i)=>{const hr=(i+6)%24;return {h:hr,l:(hr<10?'0':'')+hr+(i>=18?'↑':'')};});
+
+function getSlots(){ const v=parseInt(document.getElementById('fsIntervalSel').value); return v===1?FS_SLOTS_1H:v===2?FS_SLOTS_2H:FS_SLOTS_4H; }
+
+function fsClassify(p,val){
+    if(val===null||val===undefined||val==='') return 'fs-val-empty';
+    if(typeof val==='string') return 'fs-val-ins';
+    if(p.critHigh!==null&&val>=p.critHigh) return 'fs-val-crit';
+    if(p.critLow!==null&&val<=p.critLow)   return 'fs-val-crit';
+    if(p.refHigh!==null&&val>p.refHigh)    return 'fs-val-hi';
+    if(p.refLow!==null&&val<p.refLow)      return 'fs-val-lo';
+    return 'fs-val-ok';
+}
+
+function fsSparkline(vals,color){
+    const nums=vals.filter(v=>typeof v==='number');
+    if(nums.length<2) return '';
+    const mn=Math.min(...nums),mx=Math.max(...nums),rng=mx-mn||1;
+    return `<div class="fs-sparkline">${nums.map(v=>`<div class="fs-spark-bar" style="height:${Math.max(2,Math.round(((v-mn)/rng)*16))}px;background:${color};"></div>`).join('')}</div>`;
+}
+
+function renderFlowsheet(){
+    const slots=getSlots(), dayData=fsData[fsActiveDay]||{};
+    const showAll=document.getElementById('fsShowAll').checked;
+    const nowH=new Date().getHours();
+
+    // THEAD
+    document.getElementById('fsThead').innerHTML=`<tr>
+        <th class="fs-param-col">Parameter / Unit</th>
+        ${slots.map(s=>{const isNow=s.h===nowH&&fsActiveDay==='08/03/26';return`<th class="min-w-[58px]${isNow?' fs-now-hdr':''}">${s.l}${isNow?'<br><span style="font-size:7px;opacity:.8;">▶Now</span>':''}</th>`;}).join('')}
+        <th style="background:#374151;color:#94a3b8;min-width:64px;">Trend</th>
+        <th style="background:#374151;color:#94a3b8;min-width:82px;">Min–Max / Avg</th>
+    </tr>`;
+
+    // TBODY
+    const tbody=document.getElementById('fsTbody');
+    tbody.innerHTML='';
+    let lastGroup='';
+
+    fsParams.forEach(param=>{
+        const isKey=['cbg','ins','sbp','hr','spo2','uo'].includes(param.id);
+        if(!showAll && !isKey) return;
+
+        if(param.group!==lastGroup){
+            const gtr=document.createElement('tr'); gtr.className='fs-group-hdr';
+            gtr.innerHTML=`<td colspan="${slots.length+3}">${param.group}</td>`;
+            tbody.appendChild(gtr); lastGroup=param.group;
+        }
+
+        const pd=dayData[param.id]||{};
+        const allVals=slots.map(s=>pd[s.h]??null);
+        const nums=allVals.filter(v=>typeof v==='number');
+        const mn=nums.length?Math.min(...nums):null;
+        const mx=nums.length?Math.max(...nums):null;
+        const avg=nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:null;
+
+        const tr=document.createElement('tr');
+        if(param.isInsulin) tr.className='fs-insulin-row';
+        if(param.isFluid)   tr.style.opacity='0.8';
+
+        const cells=slots.map(s=>{
+            const v=pd[s.h]??null;
+            const isNow=s.h===nowH&&fsActiveDay==='08/03/26';
+            const cls=v===null?'fs-val-empty':fsClassify(param,v);
+            const disp=v===null?'—':(typeof v==='string'?v:v.toFixed(param.dec));
+            const crit=cls==='fs-val-crit'?' title="⚠ Critical"':'';
+            return `<td class="${isNow?'fs-now-col':''}"${crit}><span class="${cls}">${disp}</span></td>`;
+        }).join('');
+
+        const sumTxt=nums.length===0?'—':
+            (param.id==='uo'||param.id==='iv')
+            ?`Σ <b>${nums.reduce((a,b)=>a+b,0)}</b> mL`
+            :`${mn?.toFixed(param.dec)} – ${mx?.toFixed(param.dec)}<br><span style="opacity:.6">avg ${avg?.toFixed(param.dec)}</span>`;
+
+        tr.innerHTML=`
+            <td class="fs-param-label">${param.label}<span class="fs-unit">${param.unit}</span></td>
+            ${cells}
+            <td>${fsSparkline(allVals,param.color)}</td>
+            <td style="font-size:9px;color:#475569;font-family:'Sarabun',sans-serif;text-align:center;">${sumTxt}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    // Fluid balance summary
+    const ivT=slots.reduce((s,sl)=>s+((dayData['iv']||{})[sl.h]||0),0);
+    const uoT=slots.reduce((s,sl)=>s+((dayData['uo']||{})[sl.h]||0),0);
+    const bal=ivT-uoT;
+    const bCol=bal>500?'#dc2626':bal<-200?'#2563eb':'#15803d';
+    const balRow=document.createElement('tr'); balRow.className='fs-summary-row';
+    balRow.innerHTML=`
+        <td class="fs-param-label" style="font-size:10px;font-weight:900;">⚖ Fluid Balance</td>
+        <td colspan="${slots.length}" style="text-align:left;padding-left:12px;font-family:'Sarabun',sans-serif;font-size:10px;">
+            IV In <b>${ivT} mL</b> &nbsp;·&nbsp; UO Out <b>${uoT} mL</b> &nbsp;·&nbsp;
+            Balance <b style="color:${bCol}">${bal>0?'+':''}${bal} mL</b>
+            ${Math.abs(bal)>500?'<span style="background:#fef2f2;color:#991b1b;font-size:8px;padding:1px 7px;border-radius:10px;margin-left:8px;font-weight:900;">⚠ IMBALANCED</span>':''}
+        </td><td></td><td></td>`;
+    tbody.appendChild(balRow);
+}
+
+function setFsDay(day){
+    fsActiveDay=day;
+    document.querySelectorAll('.fs-day-btn').forEach(b=>b.classList.toggle('active',b.dataset.day===day));
+    renderFlowsheet();
+}
+
+function initFlowsheet(){
+    const bar=document.getElementById('fsDayBtns'); bar.innerHTML='';
+    fsDays.forEach(d=>{
+        const b=document.createElement('button');
+        b.className='fs-day-btn'+(d===fsActiveDay?' active':'');
+        b.dataset.day=d; b.onclick=()=>setFsDay(d);
+        b.textContent=d+(d==='08/03/26'?' (วันนี้)':'');
+        bar.appendChild(b);
+    });
+    renderFlowsheet();
+}
+
+window.onload=()=>{ renderList(); setPreview('CBC'); updateMonitorAlertDot(); };
+</script>
+</body>
+</html>
