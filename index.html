@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMR v11 — Clinical Workspace</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/*
+  LAYOUT RATIONALE (v11)
+  ──────────────────────
+  LEFT  35% = History  → context, read first, narrower
+  RIGHT 65% = Current  → workspace, write here, wider
+
+  Eye-path: left-to-right, context→action
+  Two-monitor: History pop-out button sends it to new window
+
+  CURRENT VISIT = ONE flowing paper document
+  No separate scrollable boxes. One scroll. Like writing A4.
+  Label column (fixed 100px) + Content column (flex)
+  Thin hr between sections. No background colour difference.
+*/
+:root {
+  --navy: #1b3a6b; --navy-m: #2453a0; --navy-p: #edf2fb; --navy-l: #d6e3f7;
+  --bg:   #e8e4de; --s0: #ffffff;     --s1: #f7f5f1;     --s2: #f0ece6;
+  --rule: #e0dbd2; --rule2: #ccc7bc;
+  --t1: #171410;   --t2: #4a453f;     --t3: #8a837a;      --t4: #c5bfb8;
+  --r: #c0392b;    --rb: #fef2f1;     --rl: #fbd5d1;
+  --a: #7c4a00;    --ab: #fefaed;     --al: #fde9a2;
+  --g: #1a6634;    --gb: #f1fbf4;     --gl: #b8eeca;
+  --nurse:#5b21b6; --nurse-p:#f5f3ff; --nurse-l:#ddd6fe;
+  --H: 52px;
+  --font: 'Noto Sans Thai', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100vh; overflow: hidden; }
+body { font-family: var(--font); color: var(--t1); font-size: 13px; line-height: 1.55; background: var(--bg); }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--rule2); border-radius: 4px; }
+
+/* ──────────────────────────────────────
+   HEADER — patient + vitals, always visible
+────────────────────────────────────── */
+.hdr {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--H);
+  background: var(--navy); display: flex; align-items: stretch;
+  z-index: 300; border-bottom: 1px solid rgba(0,0,0,.2);
+}
+
+.hdr-pt {
+  display: flex; align-items: center; gap: 10px; padding: 0 14px;
+  border-right: 1px solid rgba(255,255,255,.1); flex-shrink: 0; min-width: 186px;
+}
+.pt-av { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.14); border: 1.5px solid rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.pt-nm { font-size: 13px; font-weight: 700; color: #fff; line-height: 1.2; }
+.pt-sb { font-size: 10px; color: rgba(255,255,255,.44); font-family: var(--mono); margin-top: 1px; }
+
+.hdr-v { display: flex; align-items: stretch; flex: 1; border-right: 1px solid rgba(255,255,255,.1); overflow: hidden; }
+.vi { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 0 10px; min-width: 54px; border-right: 1px solid rgba(255,255,255,.07); position: relative; cursor: default; transition: background .12s; }
+.vi:hover { background: rgba(255,255,255,.06); }
+.vi.abn::before, .vi.warn::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.vi.abn::before { background: var(--r); } .vi.warn::before { background: #f59e0b; }
+.vl { font-size: 8px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: rgba(255,255,255,.37); }
+.vv { font-family: var(--mono); font-size: 14px; font-weight: 600; color: rgba(255,255,255,.9); line-height: 1; margin-top: 2px; }
+.vv.abn { color: #fca5a5; } .vv.warn { color: #fcd34d; } .vv.ok { color: #86efac; }
+.vu { font-size: 8px; color: rgba(255,255,255,.26); margin-top: 1px; }
+
+.hdr-alg { display: flex; align-items: center; gap: 5px; padding: 0 12px; border-right: 1px solid rgba(255,255,255,.1); flex-shrink: 0; }
+.alg-d { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; }
+.alg-t { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.55); }
+
+.hdr-nurse { display: flex; align-items: center; gap: 6px; padding: 0 12px; border-right: 1px solid rgba(255,255,255,.1); cursor: pointer; flex-shrink: 0; transition: background .12s; }
+.hdr-nurse:hover { background: rgba(255,255,255,.06); }
+.nurse-pulse { width: 7px; height: 7px; border-radius: 50%; background: #a78bfa; animation: nd 2s infinite; flex-shrink: 0; }
+@keyframes nd { 0%, 100% { opacity: .6; } 50% { opacity: 1; } }
+.nurse-txt { font-size: 10.5px; font-weight: 600; color: #c4b5fd; }
+.nurse-badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 8px; background: rgba(167,139,250,.25); color: #c4b5fd; font-family: var(--mono); }
+
+.hdr-r { display: flex; align-items: center; gap: 8px; padding: 0 12px; flex-shrink: 0; }
+.enc-tag { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,.14); color: rgba(255,255,255,.8); text-transform: uppercase; letter-spacing: .3px; }
+.spec-sel { appearance: none; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.78); font-family: var(--font); font-size: 11px; padding: 4px 20px 4px 9px; border-radius: 5px; cursor: pointer; outline: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='rgba(255,255,255,.3)'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; }
+.usr { width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,.18); border: 1.5px solid rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; cursor: pointer; }
+
+/* ──────────────────────────────────────
+   SHELL
+────────────────────────────────────── */
+.shell { position: fixed; top: var(--H); left: 0; right: 0; bottom: 0; display: flex; overflow: hidden; }
+
+/* ──────────────────────────────────────
+   LEFT PANE — HISTORY  35%
+   Context. Read first. Narrower.
+────────────────────────────────────── */
+.lp {
+  width: 35%; min-width: 280px; max-width: 480px;
+  flex-shrink: 0; background: var(--s0);
+  border-right: 2px solid var(--rule);
+  display: flex; flex-direction: column; overflow: hidden;
+  transition: width .22s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.lp.collapsed { width: 32px; min-width: 32px; }
+.lp.expanded  { width: 65%; max-width: none; }
+
+/* Collapsed strip */
+.lp-strip { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 14px; cursor: pointer; padding: 16px 0; }
+.lp.collapsed .lp-strip { display: flex; }
+.lp.collapsed .lp-main  { display: none; }
+.strip-ico { font-size: 15px; }
+.strip-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--t3); writing-mode: vertical-rl; transform: rotate(180deg); }
+
+/* Toggle button */
+.lp-toggle {
+  position: absolute; right: -14px; top: 50%; transform: translateY(-50%);
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--s0); border: 1px solid var(--rule2);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; z-index: 20; box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  font-size: 11px; color: var(--t2); transition: all .15s; user-select: none;
+}
+.lp-toggle:hover { background: var(--navy-p); color: var(--navy); border-color: var(--navy-l); }
+
+.lp-main { display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+
+/* Left pane header */
+.lp-hdr {
+  display: flex; align-items: center; gap: 7px; padding: 0 12px; height: 32px;
+  border-bottom: 1px solid var(--rule); background: var(--s1); flex-shrink: 0;
+}
+.lp-hdr-t { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--t3); flex: 1; }
+
+/* Visit dropdown */
+.visit-sel-wrap { padding: 7px 10px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+.visit-dd {
+  width: 100%; appearance: none; background: var(--s1); border: 1px solid var(--rule);
+  border-radius: 6px; padding: 6px 28px 6px 10px; font-family: var(--font); font-size: 12px;
+  color: var(--t1); cursor: pointer; outline: none; font-weight: 500;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a837a'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.visit-dd:focus { border-color: var(--navy-m); background: var(--s0); }
+.visit-tags { display: flex; gap: 3px; margin-top: 5px; flex-wrap: wrap; }
+.vtag { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+.vt-ipd { background: var(--navy-p); color: var(--navy); }
+.vt-opd { background: var(--s2); color: var(--t3); border: 1px solid var(--rule); }
+.vt-r { background: var(--rb); color: var(--r); }
+.vt-a { background: var(--ab); color: var(--a); }
+.vt-g { background: var(--gb); color: var(--g); }
+
+/* Focus axes */
+.focus-strip { padding: 7px 10px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+.focus-axes { display: flex; gap: 2px; margin-bottom: 5px; border-bottom: 1px solid var(--rule); padding-bottom: 5px; }
+.fa-btn { font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 4px; cursor: pointer; color: var(--t3); background: transparent; border: none; font-family: var(--font); transition: all .12s; }
+.fa-btn:hover { color: var(--t1); } .fa-btn.on { background: var(--navy); color: #fff; }
+.focus-chips { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.fchip { padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--rule); color: var(--t2); background: transparent; transition: all .12s; user-select: none; }
+.fchip:hover { border-color: var(--navy-m); color: var(--navy-m); }
+.fchip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.fchip.r { border-color: var(--rl); color: var(--r); } .fchip.r.on { background: var(--r); border-color: var(--r); color: #fff; }
+.fchip.a { border-color: var(--al); color: var(--a); } .fchip.a.on { background: var(--a); border-color: var(--a); color: #fff; }
+
+.l-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+
+/* Visit cards in history */
+.vc { border-bottom: 2px solid var(--rule); }
+.vc.highlighted { border-left: 3px solid var(--navy); }
+.vc.dimmed { opacity: .3; }
+.vc-hdr { display: flex; align-items: center; gap: 8px; padding: 9px 12px; cursor: pointer; transition: background .1s; }
+.vc-hdr:hover { background: var(--s1); }
+.vc-left { flex: 1; min-width: 0; }
+.vc-toprow { display: flex; align-items: center; gap: 5px; margin-bottom: 2px; }
+.vcb-ipd { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; background: var(--navy-p); color: var(--navy); }
+.vcb-opd { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; background: var(--s2); color: var(--t3); border: 1px solid var(--rule); }
+.vc-date { font-size: 11px; font-weight: 600; color: var(--t1); }
+.vc-dept { font-size: 10.5px; color: var(--t3); }
+.vc-flags { display: flex; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
+.vcf { font-size: 9.5px; font-weight: 600; padding: 1px 6px; border-radius: 3px; }
+.vcf.r { background: var(--rb); color: var(--r); } .vcf.a { background: var(--ab); color: var(--a); } .vcf.g { background: var(--gb); color: var(--g); }
+.vc-chev { font-size: 10px; color: var(--t4); transition: transform .15s; flex-shrink: 0; }
+.vc.closed .vc-chev { transform: rotate(-90deg); } .vc.closed .vc-body { display: none; }
+
+/* Visit body */
+.vc-body { padding: 0 12px 10px; }
+.vcb-row { margin-top: 8px; }
+.vcb-lbl { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+.vcb-lbl::after { content: ''; flex: 1; height: 1px; background: var(--navy-l); }
+.vcb-cc { font-size: 11.5px; color: var(--t2); line-height: 1.55; }
+.vcb-dx { display: flex; flex-wrap: wrap; gap: 3px; }
+.dxb { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 4px; font-size: 11px; border: 1px solid var(--rule); background: var(--s1); color: var(--t1); }
+.dxb.pri { border-color: var(--navy); background: var(--navy-p); }
+.dxb-c { font-family: var(--mono); font-size: 9.5px; color: var(--navy-m); font-weight: 500; }
+.vcb-labs { display: flex; flex-direction: column; gap: 0; }
+.vcb-lr { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--rule); }
+.vcb-lr:last-child { border-bottom: none; }
+.vcb-ln { font-size: 11.5px; color: var(--t2); font-weight: 500; flex: 1; }
+.vcb-lv { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+.vcb-lv.r { color: var(--r); } .vcb-lv.a { color: #b45309; } .vcb-lv.g { color: var(--g); }
+.vcb-lf { font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 2px; }
+.lf-r { background: var(--rb); color: var(--r); } .lf-a { background: var(--ab); color: var(--a); } .lf-g { background: var(--gb); color: var(--g); }
+.sp { display: inline-block; vertical-align: middle; }
+
+/* Medication list in history — plain numbered list */
+.vcb-meds { display: flex; flex-direction: column; }
+.vcb-mr { display: flex; align-items: baseline; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--rule); }
+.vcb-mr:last-child { border-bottom: none; }
+.vcb-mn { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--t4); min-width: 14px; flex-shrink: 0; }
+.vcb-mb { flex: 1; min-width: 0; }
+.vcb-mname { font-size: 12px; font-weight: 700; color: var(--t1); }
+.vcb-mgn { font-size: 10.5px; font-weight: 400; color: var(--t3); margin-left: 4px; }
+.vcb-msig { font-size: 11px; color: var(--t2); font-family: var(--mono); display: block; margin-top: 1px; }
+.vcb-mtags { display: flex; gap: 3px; margin-top: 2px; flex-wrap: wrap; }
+.mt { font-size: 9.5px; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+.mt-ok { background: var(--gb); color: var(--g); }
+.mt-n { background: var(--navy-p); color: var(--navy); }
+.mt-dt { color: var(--t3); font-family: var(--mono); font-weight: 400; font-size: 9px; background: none; padding: 0; }
+.mt-off { background: var(--rb); color: var(--r); }
+
+/* ──────────────────────────────────────
+   DIVIDER (draggable resize)
+────────────────────────────────────── */
+.divider {
+  width: 4px; flex-shrink: 0; cursor: col-resize;
+  background: var(--rule);
+  transition: background .15s;
+  position: relative; z-index: 10;
+}
+.divider:hover, .divider.dragging { background: var(--navy-l); }
+
+/* ──────────────────────────────────────
+   RIGHT PANE — CURRENT VISIT  65%
+   The workspace. Write here.
+────────────────────────────────────── */
+.rp { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--s0); }
+/* Phase area gets a flex row to hold content + right panel + strip */
+.phase-area { flex: 1; overflow: hidden; min-height: 0; display: flex; flex-direction: column; }
+
+/* Current label bar */
+.rp-lbl {
+  display: flex; align-items: center; gap: 8px; padding: 0 16px; height: 32px;
+  background: var(--navy-p); border-bottom: 2px solid var(--navy-l); flex-shrink: 0;
+}
+.rp-lbl-t { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--navy); flex: 1; }
+.sdot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: sd 2.5s infinite; display: inline-block; }
+@keyframes sd { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+
+/* Nursing bar */
+.nurse-bar { display: flex; align-items: center; gap: 8px; padding: 5px 16px; background: var(--nurse-p); border-bottom: 1px solid var(--nurse-l); flex-shrink: 0; cursor: pointer; transition: background .1s; }
+.nurse-bar:hover { background: #ede9fe; }
+.nb-ico { font-size: 13px; flex-shrink: 0; }
+.nb-c { flex: 1; min-width: 0; }
+.nb-title { font-size: 11px; font-weight: 700; color: var(--nurse); }
+.nb-items { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1px; }
+.nb-item { font-size: 10.5px; color: #6d28d9; }
+.nb-item .nt { font-family: var(--mono); font-size: 9.5px; color: #a78bfa; margin-left: 3px; }
+.nb-expand { font-size: 10px; color: var(--nurse); font-weight: 600; flex-shrink: 0; }
+.nurse-detail { background: var(--nurse-p); border-bottom: 1px solid var(--nurse-l); padding: 8px 16px; display: none; flex-shrink: 0; }
+.nurse-detail.show { display: block; }
+.nd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.nd-card { background: #fff; border: 1px solid var(--nurse-l); border-radius: 5px; padding: 7px 10px; }
+.nd-hdr { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+.nd-ht { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--nurse); }
+.nd-tm { font-size: 10px; font-family: var(--mono); color: #a78bfa; margin-left: auto; }
+.nd-row { font-size: 11.5px; display: flex; gap: 6px; padding: 2px 0; border-bottom: 1px solid #f3f0ff; }
+.nd-row:last-child { border-bottom: none; }
+.nd-k { color: var(--t3); min-width: 65px; font-size: 11px; }
+.nd-v { color: var(--t1); font-weight: 500; } .nd-v.r { color: var(--r); } .nd-v.ok { color: var(--g); }
+
+/* Phase tab bar */
+.phase-bar {
+  display: flex; align-items: stretch;
+  background: var(--s0); border-bottom: 1px solid var(--rule);
+  flex-shrink: 0; height: 38px;
+}
+.ph-tab {
+  display: flex; align-items: center; gap: 6px; padding: 0 18px;
+  font-family: var(--font); font-size: 12.5px; font-weight: 600; cursor: pointer;
+  color: var(--t3); border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all .12s; user-select: none;
+}
+.ph-tab:hover { color: var(--t1); background: var(--s1); }
+.ph-tab.on { color: var(--navy); border-bottom-color: var(--navy); }
+.ph-tab.done { color: var(--g); border-bottom-color: transparent; }
+.ph-num { width: 18px; height: 18px; border-radius: 50%; background: var(--rule); font-size: 9.5px; font-weight: 700; display: flex; align-items: center; justify-content: center; transition: all .15s; flex-shrink: 0; }
+.ph-tab.on  .ph-num { background: var(--navy); color: #fff; }
+.ph-tab.done .ph-num { background: var(--g); color: #fff; }
+.ph-bar-r { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding: 0 12px; }
+.ph-sep { width: 1px; height: 20px; background: var(--rule); flex-shrink: 0; }
+.sdot-sm { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: sd 2.5s infinite; display: inline-block; }
+
+/* ══════════════════════════════════════
+   PHASE 1 — SINGLE FLOWING PAPER
+   
+   ONE scroll on paper-doc.
+   Textareas auto-grow. No sub-scrolls.
+   Sections separated by thin line only.
+   Labels: sticky to their section top.
+══════════════════════════════════════ */
+.paper-doc {
+  flex: 1; overflow-y: auto; min-height: 0;
+  background: var(--s0);
+}
+
+/* Section = thin rule, content height is whatever it needs */
+.prow {
+  display: flex; flex-direction: column;
+  border-bottom: 1px solid var(--rule);
+}
+.prow:last-child { border-bottom: none; }
+.prow:focus-within { background: #fafeff; }
+
+/* Section header — horizontal bar, no side column, full width */
+.prow-lbl {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 18px 3px;
+  border-left: 3px solid var(--navy-l);
+  transition: border-color .15s;
+}
+.prow-lbl-th {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .6px; color: var(--navy);
+  transition: color .15s;
+}
+.prow-lbl-en { font-size: 9px; color: var(--t4); }
+.prow-lbl-note { font-size: 9px; color: var(--t4); }
+.prow:focus-within .prow-lbl { border-left-color: var(--navy-m); }
+.prow:focus-within .prow-lbl-th { color: var(--navy-m); }
+
+/* prow: vertical, not horizontal */
+.prow-content { flex: 1; min-width: 0; }
+
+/* Textarea — REPLACED by contenteditable div
+   contenteditable grows naturally with content.
+   No JS needed. No height calc. No scroll. Ever. */
+.pta {
+  display: block; width: 100%;
+  padding: 14px 20px;
+  background: transparent; outline: none;
+  font-family: var(--font); font-size: 13.5px;
+  color: var(--t1); line-height: 1.85;
+  white-space: pre-wrap; word-break: break-word;
+  min-height: 52px;
+  cursor: text;
+}
+.pta:empty::before {
+  content: attr(data-ph);
+  color: var(--t4); font-style: italic;
+  pointer-events: none;
+}
+.pta:focus { outline: none; }
+
+/* Diagnosis section */
+.dx-row {
+  padding: 12px 20px 10px;
+}
+.dx-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.dxc { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 12px; border: 1px solid var(--rule); background: var(--s1); color: var(--t1); }
+.dxc.pri { border-color: var(--navy); background: var(--navy-p); }
+.dc-c { font-family: var(--mono); font-size: 10px; color: var(--navy-m); font-weight: 500; }
+.dc-x { font-size: 11px; color: var(--t4); cursor: pointer; margin-left: 2px; } .dc-x:hover { color: var(--r); }
+.dx-inp-wrap { position: relative; margin-bottom: 8px; }
+.dx-inp { width: 100%; background: transparent; border: none; border-bottom: 1px dashed var(--rule2); outline: none; padding: 4px 0; font-family: var(--font); font-size: 12.5px; color: var(--t1); }
+.dx-inp:focus { border-bottom-color: var(--navy-m); }
+.dx-inp::placeholder { color: var(--t4); font-style: italic; }
+.dx-drop { position: absolute; left: 0; right: 0; top: calc(100% + 3px); background: var(--s0); border: 1px solid var(--rule2); border-radius: 5px; box-shadow: 0 4px 14px rgba(0,0,0,.1); z-index: 50; overflow: hidden; display: none; }
+.dx-drop.show { display: block; }
+.dx-opt { display: flex; align-items: center; gap: 9px; padding: 7px 12px; cursor: pointer; font-size: 12px; border-bottom: 1px solid var(--rule); transition: background .08s; }
+.dx-opt:last-child { border-bottom: none; } .dx-opt:hover { background: var(--navy-p); }
+.dx-oc { font-family: var(--mono); font-size: 10.5px; color: var(--navy-m); font-weight: 500; min-width: 42px; }
+/* Assessment note — contenteditable, grows naturally */
+.dx-note {
+  display: block; width: 100%; outline: none;
+  padding: 4px 0; margin-top: 4px;
+  font-family: var(--font); font-size: 13px; color: var(--t2);
+  line-height: 1.75; white-space: pre-wrap; word-break: break-word;
+  min-height: 36px; cursor: text;
+}
+.dx-note:empty::before {
+  content: attr(data-ph);
+  color: var(--t4); font-style: italic; pointer-events: none;
+}
+
+/* Rx list — plain, no sub-scroll */
+.rx-doc { padding: 10px 20px 14px; }
+.rx-item {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid var(--rule);
+}
+.rx-item:last-child { border-bottom: none; }
+.rx-num { font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--t4); min-width: 16px; flex-shrink: 0; }
+.rx-body { flex: 1; min-width: 0; }
+.rx-name { font-size: 13.5px; font-weight: 700; color: var(--t1); }
+.rx-generic { font-size: 10.5px; font-weight: 400; color: var(--t3); margin-left: 5px; }
+.rx-bold { font-weight: 700; }
+.rx-sig { font-size: 12.5px; color: var(--t2); display: block; margin-top: 1px; line-height: 1.5; }
+.rx-meta { display: flex; align-items: center; gap: 6px; margin-top: 3px; }
+.rx-qty { font-size: 11px; font-style: italic; color: var(--navy-m); font-weight: 600; }
+.rx-status { font-size: 9.5px; font-weight: 700; padding: 1px 5px; border-radius: 3px; }
+.rxs-ok  { background: var(--gb); color: var(--g); }
+.rxs-pnd { background: var(--ab); color: var(--a); }
+.rxs-ha  { background: var(--rb); color: var(--r); font-size: 9px; }
+.rx-add {
+  display: flex; align-items: center; gap: 5px;
+  padding: 8px 0; margin-top: 2px;
+  font-size: 12.5px; font-weight: 600; color: var(--t4);
+  cursor: pointer; transition: color .12s;
+  border-top: 1px dashed var(--rule2);
+}
+.rx-add:hover { color: var(--navy-m); }
+
+/* Paper footer */
+.paper-footer {
+  display: flex; align-items: center; gap: 7px; padding: 7px 20px;
+  background: var(--s0); border-top: 1px solid var(--rule); flex-shrink: 0;
+}
+.pf-stamp { flex: 1; font-size: 11px; color: var(--t3); }
+
+/* ══════════════════════════════════════
+   PHASE 2 — ORDERS
+══════════════════════════════════════ */
+.orders-view { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+.orders-sidebar { width: 220px; flex-shrink: 0; border-right: 1px solid var(--rule); display: flex; flex-direction: column; overflow: hidden; }
+.os-hdr { height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-bottom: 1px solid var(--rule); background: var(--s1); }
+.os-t { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--t3); flex: 1; }
+.os-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+.oi { display: flex; align-items: flex-start; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--rule); cursor: pointer; transition: background .1s; }
+.oi:hover { background: var(--s1); } .oi:last-child { border-bottom: none; }
+.oi-ico { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
+.oi-b { flex: 1; min-width: 0; }
+.oi-nm { font-size: 12px; font-weight: 600; color: var(--t1); line-height: 1.3; }
+.oi-sub { font-size: 10.5px; color: var(--t2); margin-top: 1px; }
+.oi-tag { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 3px; display: inline-block; margin-top: 3px; }
+.ot-pend { background: var(--ab); color: var(--a); } .ot-done { background: var(--gb); color: var(--g); } .ot-ord { background: var(--navy-p); color: var(--navy); }
+.os-add { padding: 8px 12px; flex-shrink: 0; border-top: 1px solid var(--rule); }
+.oa-inp { width: 100%; background: var(--s1); border: 1px solid var(--rule); border-radius: 4px; padding: 5px 9px; font-family: var(--font); font-size: 12px; color: var(--t1); outline: none; }
+.oa-inp:focus { border-color: var(--navy-m); background: var(--s0); }
+.oa-inp::placeholder { color: var(--t4); }
+
+.orders-main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+.otabs { display: flex; background: var(--s0); border-bottom: 1px solid var(--rule); flex-shrink: 0; height: 36px; align-items: stretch; }
+.otab { display: flex; align-items: center; gap: 5px; padding: 0 14px; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; color: var(--t3); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .12s; }
+.otab:hover { color: var(--t1); background: var(--s1); } .otab.on { color: var(--navy); border-bottom-color: var(--navy); }
+.otab-badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 8px; background: var(--rule); color: var(--t3); }
+.otab.on .otab-badge { background: var(--navy); color: #fff; }
+.otabs-r { flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; }
+.otab-panel { display: none; flex: 1; overflow-y: auto; min-height: 0; }
+.otab-panel.on { display: block; }
+
+/* Rx table */
+.rx-table { width: 100%; border-collapse: collapse; }
+.rx-table th { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--t3); padding: 6px 14px; border-bottom: 1px solid var(--rule); text-align: left; background: var(--s1); position: sticky; top: 0; z-index: 5; }
+.rx-table td { padding: 9px 14px; font-size: 12.5px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.rx-table tr:last-child td { border-bottom: none; } .rx-table tr:hover td { background: var(--s1); } .rx-table tr.pend td { background: var(--ab); }
+.rxn { font-weight: 700; color: var(--t1); }
+.rxg { font-size: 10.5px; font-weight: 400; color: var(--t2); }
+.rx-ha-inline { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: var(--rl); color: var(--r); display: inline-block; margin-top: 2px; }
+.rx-sts { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+.rxs-act { background: var(--gb); color: var(--g); } .rxs-pnd2 { background: var(--ab); color: var(--a); }
+.rx-mono { font-family: var(--mono); font-size: 12px; }
+.rx-pc { font-size: 10.5px; color: var(--t3); white-space: nowrap; }
+.rx-ver { font-size: 9.5px; color: #6d28d9; font-weight: 600; display: block; margin-top: 2px; }
+.rx-add-row { padding: 8px 14px; border-top: 1px dashed var(--rule2); }
+.rx-add-btn { font-size: 12px; font-weight: 600; color: var(--t4); cursor: pointer; transition: color .12s; display: flex; align-items: center; gap: 5px; }
+.rx-add-btn:hover { color: var(--navy-m); }
+
+/* Lab / Xray table */
+.lab-table { width: 100%; border-collapse: collapse; }
+.lab-table th { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--t3); padding: 6px 14px; border-bottom: 1px solid var(--rule); text-align: left; background: var(--s1); position: sticky; top: 0; z-index: 5; }
+.lab-table td { padding: 7px 14px; font-size: 12.5px; border-bottom: 1px solid var(--rule); vertical-align: middle; }
+.lab-table tr:last-child td { border-bottom: none; } .lab-table tr:hover td { background: var(--s1); }
+.lv { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+.lv.r { color: var(--r); } .lv.a { color: #b45309; } .lv.g { color: var(--g); }
+.lab-add-row { padding: 8px 14px; border-top: 1px dashed var(--rule2); }
+
+/* Phase 3 */
+.end-3 { display: flex; flex: 1; gap: 1px; background: var(--rule); overflow: hidden; min-height: 0; }
+.end-col { display: flex; flex-direction: column; overflow: hidden; min-height: 0; background: var(--s0); }
+.end-col.a { flex: 1.2; } .end-col.b { flex: 1; } .end-col.c { flex: 1; }
+.ec-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+.oc-hdr { height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 7px; padding: 0 12px; border-bottom: 1px solid var(--rule); background: var(--s1); }
+.oc-t { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--t3); flex: 1; }
+.sum-kpi { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
+.kpi { background: var(--s1); border: 1px solid var(--rule); border-radius: 6px; padding: 7px 8px; text-align: center; position: relative; overflow: hidden; }
+.kpi::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi.r::before { background: var(--r); } .kpi.a::before { background: #f59e0b; } .kpi.g::before { background: var(--g); }
+.kpi-l { font-size: 8.5px; font-weight: 700; text-transform: uppercase; color: var(--t3); }
+.kpi-v { font-family: var(--mono); font-size: 18px; font-weight: 600; margin: 2px 0; }
+.kpi-v.r { color: var(--r); } .kpi-v.a { color: #b45309; } .kpi-v.g { color: var(--g); }
+.kpi-t { font-size: 9px; color: var(--t3); }
+.e-block { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+.e-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); margin-bottom: 5px; }
+.e-body { font-size: 12.5px; color: var(--t2); line-height: 1.65; border-left: 2px solid var(--navy-l); padding-left: 9px; }
+.e-body em { font-style: normal; font-weight: 600; color: var(--navy-m); }
+.fu-row { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-bottom: 1px solid var(--rule); }
+.fu-ico { font-size: 14px; flex-shrink: 0; } .fu-info { flex: 1; }
+.fu-t { font-size: 12px; font-weight: 600; color: var(--t1); } .fu-s { font-size: 11px; color: var(--t2); }
+.fu-inp { background: var(--s1); border: 1px solid var(--rule); border-radius: 4px; padding: 4px 8px; font-family: var(--mono); font-size: 11.5px; color: var(--t1); outline: none; width: 106px; }
+.fu-inp:focus { border-color: var(--navy-m); }
+.doc-list { padding: 8px 14px; display: flex; flex-direction: column; gap: 3px; }
+.dc { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 4px; border: 1px solid var(--rule); background: var(--s1); cursor: pointer; transition: background .1s; }
+.dc:hover { background: var(--s0); } .dc.done { background: var(--gb); border-color: var(--gl); }
+.dc-cb { width: 16px; height: 16px; border-radius: 3px; border: 1.5px solid var(--rule2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+.dc.done .dc-cb { background: var(--g); border-color: var(--g); color: #fff; }
+.dc-n { font-size: 12px; font-weight: 500; color: var(--t1); flex: 1; } .dc.done .dc-n { color: var(--g); }
+.dc-btn { font-size: 11px; color: var(--navy-m); font-weight: 500; }
+.btn-lock { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; border-radius: 5px; background: var(--navy); color: #fff; font-family: var(--font); font-size: 12.5px; font-weight: 700; cursor: pointer; border: none; width: 100%; transition: all .12s; }
+.btn-lock:hover { background: var(--navy-m); }
+
+/* ════ ORDER GROUPS (Phase 2) — paper-style, no sub-scroll ════ */
+/* ord-row: same horizontal flow as lab item in image 2 */
+.ord-list { display: flex; flex-direction: column; gap: 0; }
+
+.ord-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0; border-bottom: 1px solid var(--rule);
+  cursor: pointer; transition: background .1s;
+}
+.ord-row:last-of-type { border-bottom: none; }
+.ord-row:hover { background: var(--navy-p); margin: 0 -18px; padding: 9px 18px; }
+.ord-row.resulted { border-left: 3px solid var(--g); padding-left: 9px; }
+.ord-row.pending  { border-left: 3px solid var(--a); padding-left: 9px; }
+
+.ord-main { flex: 1; min-width: 0; }
+.ord-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+.ord-name { font-size: 13px; font-weight: 700; color: var(--t1); }
+
+.ord-result { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; min-width: 70px; }
+.ord-val { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+.ord-val.r { color: var(--r); } .ord-val.a { color: #b45309; } .ord-val.g { color: var(--g); }
+.ord-flag { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+.ord-flag.rf { background: var(--rb); color: var(--r); }
+.ord-flag.af { background: var(--ab); color: var(--a); }
+.ord-flag.gf { background: var(--gb); color: var(--g); }
+
+/* Add row — same dashed style as rx-add */
+.ord-add {
+  padding: 8px 0; font-size: 12px; font-weight: 600;
+  color: var(--t4); cursor: pointer; border-top: 1px dashed var(--rule2);
+  margin-top: 4px; transition: color .12s;
+}
+.ord-add:hover { color: var(--navy-m); }
+
+/* Rx inside order group */
+.rx-order-row {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 8px 12px; border-bottom: 1px solid var(--rule);
+  transition: background .1s;
+}
+.rx-order-row:hover { background: var(--s1); }
+.rx-order-row:last-child { border-bottom: none; }
+.rx-order-num { font-family: var(--mono); font-size: 10.5px; font-weight: 600; color: var(--t4); min-width: 16px; flex-shrink: 0; }
+.rx-order-body { flex: 1; min-width: 0; }
+.rx-order-name { font-size: 13px; font-weight: 700; color: var(--t1); line-height: 1.4; }
+.rx-order-gn { font-size: 10.5px; font-weight: 400; color: var(--t3); margin-left: 4px; }
+.rx-order-sig { font-size: 12.5px; color: var(--t2); margin-top: 2px; }
+.rx-order-meta { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+
+/* Add row */
+.order-add-row {
+  padding: 7px 12px; font-size: 12px; font-weight: 600;
+  color: var(--t4); cursor: pointer; border-top: 1px dashed var(--rule2);
+  transition: color .12s;
+}
+.order-add-row:hover { color: var(--navy-m); }
+
+/* ════ LAB CUMU MODAL ════ */
+/* ══════════════════════════════════════
+   INLINE LAB CUMU — Phase 2 Lab section
+══════════════════════════════════════ */
+.lab-cumu-prow { flex-direction: column; }
+.lab-cumu-prow-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap;
+  padding: 5px 14px 5px 18px;
+  border-left: 3px solid var(--navy-m);
+  background: linear-gradient(to right, var(--navy-p), var(--s0));
+  flex-shrink: 0;
+}
+.lab-inline-statusbar {
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap; flex-shrink: 1;
+}
+.lab-inline-chip {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 3px 8px; border-radius: 5px;
+  font-size: 10.5px; font-weight: 600;
+  cursor: pointer; transition: opacity .12s, transform .1s;
+  border: 1px solid; user-select: none;
+}
+.lab-inline-chip:hover { opacity: .82; transform: translateY(-1px); }
+.lab-inline-chip.r     { background: var(--rb); border-color: var(--rl); color: var(--r); }
+.lab-inline-chip.amber { background: var(--ab); border-color: var(--al); color: var(--a); }
+.lab-inline-chip.g     { background: var(--gb); border-color: var(--gl); color: var(--g); }
+.lab-inline-chip.cbc   { background: var(--s2); border-color: var(--rule2); color: var(--t2); }
+.lab-chip-val  { font-family: var(--mono); font-size: 10.5px; font-weight: 700; margin-left: 1px; }
+.lab-chip-flag { font-size: 9px; font-weight: 700; margin-left: 2px; opacity: .75; }
+.lab-chip-flag.g    { color: var(--g); }
+.lab-chip-flag.pend { color: var(--t3); }
+.lab-hdr-btn { font-size: 10px !important; padding: 2px 8px !important; }
+.lab-cumu-inline-wrap {
+  position: relative; height: 560px; min-height: 480px;
+  background: #f1f5f9; border-top: 2px solid var(--navy-l);
+}
+.lab-cumu-inline-frame { width: 100%; height: 100%; border: none; display: block; }
+.lab-cumu-inline-wrap::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite; z-index: 1; pointer-events: none;
+  transition: opacity .4s;
+}
+.lab-cumu-inline-wrap.loaded::before { opacity: 0; pointer-events: none; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+.lab-cumu-modal {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(3px);
+}
+.lab-cumu-modal.open { display: flex; align-items: stretch; padding: 16px; }
+.lab-cumu-inner {
+  flex: 1; background: #fff; border-radius: 12px;
+  overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,.35);
+}
+.lab-cumu-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; background: #1e293b; flex-shrink: 0;
+}
+.lab-cumu-hdr-t { font-size: 13px; font-weight: 700; color: #fff; flex: 1; }
+.lab-cumu-hdr-sub { font-size: 11px; color: rgba(255,255,255,.5); font-family: var(--mono); }
+.lab-cumu-close {
+  padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,.2);
+  background: rgba(255,255,255,.1); color: #fff; font-family: var(--font);
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: all .12s;
+}
+.lab-cumu-close:hover { background: rgba(255,255,255,.2); }
+.lab-cumu-frame { flex: 1; border: none; min-height: 0; }
+
+/* Column mode — 2 cols side by side replacing phase area */
+/* Phase view wrappers — CRITICAL: hides inactive phases */
+.phase-view { display: none; flex: 1; overflow: hidden; min-height: 0; flex-direction: column; }
+.phase-view.on { display: flex; }
+
+/* Column mode */
+.col-mode { display: none; flex: 1; overflow: hidden; min-height: 0; gap: 1px; background: var(--rule); }
+.col-mode.on { display: flex; }
+.col-section { display: flex; flex-direction: column; overflow: hidden; min-height: 0; background: var(--s0); flex: 1; }
+.col-hdr { height: 34px; flex-shrink: 0; display: flex; align-items: center; gap: 7px; padding: 0 14px; border-bottom: 2px solid var(--navy-l); background: var(--navy-p); }
+.col-hdr-t { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--navy); flex: 1; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 5px; font-family: var(--font); font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; transition: all .12s; white-space: nowrap; }
+.btn-navy { background: var(--navy); color: #fff; border-color: var(--navy); } .btn-navy:hover { background: var(--navy-m); }
+.btn-ghost { background: transparent; color: var(--t2); border-color: var(--rule2); } .btn-ghost:hover { background: var(--s1); color: var(--t1); }
+.btn-sm { padding: 4px 9px; font-size: 11px; }
+.btn-tx { background: transparent; border-color: transparent; color: var(--navy-m); padding: 3px 6px; font-size: 11px; cursor: pointer; } .btn-tx:hover { background: var(--navy-p); border-radius: 3px; }
+
+/* Pop-out button */
+.popout-btn { font-size: 11px; color: rgba(255,255,255,.5); cursor: pointer; padding: 3px 7px; border-radius: 3px; transition: all .15s; border: 1px solid transparent; }
+.popout-btn:hover { color: rgba(255,255,255,.9); border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.08); }
+</style>
+</head>
+<body>
+
+<!-- ════ HEADER ════ -->
+<header class="hdr">
+  <div class="hdr-pt">
+    <div class="pt-av">🧑</div>
+    <div>
+      <div class="pt-nm">TEST02 TEST02</div>
+      <div class="pt-sb">29Y ♂ · H26-001066 · B+</div>
+    </div>
+  </div>
+
+  <div class="hdr-v">
+    <div class="vi warn"><div class="vl">BP</div><div class="vv warn">148/92</div><div class="vu">mmHg</div></div>
+    <div class="vi"><div class="vl">HR</div><div class="vv ok">74</div><div class="vu">bpm</div></div>
+    <div class="vi"><div class="vl">SpO₂</div><div class="vv ok">98%</div><div class="vu">—</div></div>
+    <div class="vi"><div class="vl">Temp</div><div class="vv">36.8</div><div class="vu">°C</div></div>
+    <div class="vi warn"><div class="vl">RBS</div><div class="vv warn">186</div><div class="vu">mg/dL</div></div>
+    <div class="vi abn"><div class="vl">HbA1c</div><div class="vv abn">8.4%</div><div class="vu">05 Mar</div></div>
+    <div class="vi warn"><div class="vl">LDL</div><div class="vv warn">148</div><div class="vu">mg/dL</div></div>
+    <div class="vi"><div class="vl">eGFR</div><div class="vv ok">78</div><div class="vu">mL/min</div></div>
+  </div>
+
+  <div class="hdr-alg"><span class="alg-d"></span><span class="alg-t">NKDA</span></div>
+
+  <div class="hdr-nurse" onclick="toggleNurse()">
+    <span class="nurse-pulse"></span>
+    <span class="nurse-txt">👩‍⚕️ Nursing</span>
+    <span class="nurse-badge">BP⚠ 10:00</span>
+  </div>
+
+  <div class="hdr-r">
+    <span class="enc-tag">IPD · Ward 6B</span>
+    <select class="spec-sel">
+      <option>🏥 General Med</option>
+      <option selected>🦴 Orthopedics</option>
+      <option>🧬 Endocrinology</option>
+      <option>❤️ Cardiology</option>
+      <option>🚨 ICU</option>
+    </select>
+    <div class="usr" title="DR. AUYARIN SANSOM">A</div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <!-- ════ LEFT: HISTORY 35% ════ -->
+  <div class="lp" id="histPane">
+
+    <div class="lp-strip" onclick="cycleHist()">
+      <span class="strip-ico">📖</span>
+      <span class="strip-lbl">History</span>
+    </div>
+
+    <div class="lp-toggle" id="histToggle" onclick="cycleHist()">◀</div>
+
+    <div class="lp-main">
+      <div class="lp-hdr">
+        <span class="lp-hdr-t">📖 History — ซ้าย</span>
+        <!-- Dual monitor: pop out history to new window -->
+        <span class="popout-btn" onclick="popoutHistory()" title="Pop out to second monitor">⊞</span>
+        <button class="btn btn-ghost btn-sm" onclick="expandHist()" id="expandBtn" style="font-size:10px;padding:2px 7px">Expand</button>
+      </div>
+
+      <!-- Visit selector dropdown -->
+      <div class="visit-sel-wrap">
+        <select class="visit-dd" id="visitDd" onchange="changeVisit()">
+          <option value="cur">🔵  IPD Ward 6B — 09 Feb–06 Mar 2026 (Current)</option>
+          <option value="v1">OPD Medicine Clinic — 13 Feb 2026</option>
+          <option value="v2">OPD Medicine Clinic — 14 Nov 2025</option>
+          <option value="v3">OPD Medicine Clinic — 22 Aug 2025</option>
+          <option value="v4">OPD Medicine Clinic — 10 Mar 2025 (Best)</option>
+        </select>
+        <div class="visit-tags" id="visitTags">
+          <span class="vtag vt-ipd">IPD</span>
+          <span class="vtag vt-r">BP↑</span>
+          <span class="vtag vt-r">HbA1c↑8.4%</span>
+          <span class="vtag vt-r">LDL↑148</span>
+          <span class="vtag vt-a">R Fx</span>
+        </div>
+      </div>
+
+      <!-- Focus: By Problem / By CC / By Dr / By Location -->
+      <div class="focus-strip">
+        <div class="focus-axes">
+          <button class="fa-btn on" onclick="setAxis(this,'prob')">By Problem</button>
+          <button class="fa-btn" onclick="setAxis(this,'cc')">By CC</button>
+          <button class="fa-btn" onclick="setAxis(this,'dr')">By Dr.</button>
+          <button class="fa-btn" onclick="setAxis(this,'loc')">By Location</button>
+        </div>
+        <div class="focus-chips" id="focusChips">
+          <span class="fchip on" onclick="setFocus(this,'all')">All</span>
+          <span class="fchip r"   onclick="setFocus(this,'htn')">❤️ HTN</span>
+          <span class="fchip a"   onclick="setFocus(this,'dm')">🩸 DM1</span>
+          <span class="fchip a"   onclick="setFocus(this,'lip')">🫀 Lipid</span>
+          <span class="fchip"     onclick="setFocus(this,'fx')">🦴 Fx</span>
+          <span class="fchip"     onclick="setFocus(this,'tin')">🦠 Tinea</span>
+        </div>
+      </div>
+
+      <div class="l-scroll">
+
+        <!-- Visit 1: Current IPD -->
+        <div class="vc" data-prob="htn dm lip fx tin">
+          <div class="vc-hdr" onclick="toggleVC(this)">
+            <div class="vc-left">
+              <div class="vc-toprow"><span class="vcb-ipd">IPD · Current</span><span class="vc-date">09 Feb–06 Mar 2026</span></div>
+              <div class="vc-dept">Ward 6B · DR. AUYARIN SANSOM</div>
+              <div class="vc-flags"><span class="vcf r">BP↑148/92</span><span class="vcf r">HbA1c↑8.4%</span><span class="vcf r">LDL↑148</span><span class="vcf a">Fx R humerus</span></div>
+            </div>
+            <span class="vc-chev">▾</span>
+          </div>
+          <div class="vc-body">
+            <div class="vcb-row"><div class="vcb-lbl">CC</div>
+              <div class="vcb-cc">หกล้ม แขนขวากระแทกพื้น 2 ชม. ปวดบวมแขนขวา N/V intact ไม่มีแผลเปิด</div>
+            </div>
+            <div class="vcb-row"><div class="vcb-lbl">Dx</div>
+              <div class="vcb-dx">
+                <span class="dxb pri"><span class="dxb-c">S42.3</span>Humeral Fx, R</span>
+                <span class="dxb"><span class="dxb-c">I10</span>HTN</span>
+                <span class="dxb"><span class="dxb-c">E10.9</span>DM1</span>
+                <span class="dxb"><span class="dxb-c">E78.4</span>HLD</span>
+                <span class="dxb"><span class="dxb-c">B35.2</span>Tinea</span>
+              </div>
+            </div>
+            <div class="vcb-row"><div class="vcb-lbl">Lab — 05 Mar</div>
+              <div class="vcb-labs">
+                <div class="vcb-lr"><span class="vcb-ln">HbA1c</span><span class="vcb-lv r">8.4%</span><span class="vcb-lf lf-r">HIGH</span><svg class="sp" width="44" height="18" viewBox="0 0 44 18"><polyline points="2,14 15,6 29,7 42,2" fill="none" stroke="#fca5a5" stroke-width="1.5" stroke-linejoin="round"/><circle cx="42" cy="2" r="3" fill="#c0392b"/></svg></div>
+                <div class="vcb-lr"><span class="vcb-ln">FBS</span><span class="vcb-lv r">186</span><span class="vcb-lf lf-r">HIGH</span><svg class="sp" width="44" height="18" viewBox="0 0 44 18"><polyline points="2,16 15,8 29,9 42,2" fill="none" stroke="#fca5a5" stroke-width="1.5" stroke-linejoin="round"/><circle cx="42" cy="2" r="3" fill="#c0392b"/></svg></div>
+                <div class="vcb-lr"><span class="vcb-ln">LDL</span><span class="vcb-lv r">148</span><span class="vcb-lf lf-a">HIGH</span><svg class="sp" width="44" height="18" viewBox="0 0 44 18"><polyline points="2,10 15,4 29,8 42,5" fill="none" stroke="#fde68a" stroke-width="1.5" stroke-linejoin="round"/><circle cx="42" cy="5" r="3" fill="#b45309"/></svg></div>
+                <div class="vcb-lr"><span class="vcb-ln">eGFR</span><span class="vcb-lv g">78</span><span class="vcb-lf lf-g">Normal</span></div>
+              </div>
+            </div>
+            <div class="vcb-row"><div class="vcb-lbl">Rx</div>
+              <div class="vcb-meds">
+                <div class="vcb-mr"><span class="vcb-mn">1</span><div class="vcb-mb"><span class="vcb-mname">Motilium (10 mg) tablet</span><span class="vcb-mgn">Domperidone</span><div class="vcb-msig">1 Tablet Take 3 Times Daily Before Breakfast Lunch and Dinner<br><span style="font-style:italic;color:var(--navy-m)">#3 Tablet</span></div></div></div>
+                <div class="vcb-mr"><span class="vcb-mn">2</span><div class="vcb-mb"><span class="vcb-mname">DUOCETZ TAB</span><span class="vcb-mgn">PCM 325 / Tramadol 37.5</span><div class="vcb-msig">1 Tab q6h PRN pain · <span style="font-style:italic;color:var(--navy-m)">#400 tab</span></div></div></div>
+                <div class="vcb-mr"><span class="vcb-mn">3</span><div class="vcb-mb"><span class="vcb-mname">AMOXICILLIN + CLAV 625</span><span class="vcb-mgn">Ranclav</span><div class="vcb-msig">1 Tab TID after meals · 7d · <span style="font-style:italic;color:var(--navy-m)">#21 tab</span></div></div></div>
+                <div class="vcb-mr"><span class="vcb-mn">4</span><div class="vcb-mb"><span class="vcb-mname">CLOTRIMAZOLE CREAM 1%</span><div class="vcb-msig">Apply BID × 4wk · <span style="font-style:italic;color:var(--navy-m)">#1 tube</span></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visit 2: OPD Nov 2025 -->
+        <div class="vc closed" data-prob="htn dm lip">
+          <div class="vc-hdr" onclick="toggleVC(this)">
+            <div class="vc-left">
+              <div class="vc-toprow"><span class="vcb-opd">OPD</span><span class="vc-date">14 Nov 2025</span></div>
+              <div class="vc-dept">Medicine Clinic · DR. AUYARIN SANSOM</div>
+              <div class="vc-flags"><span class="vcf a">HbA1c 7.9%</span><span class="vcf g">BP 132/84 ✓</span><span class="vcf a">Add Amlodipine</span></div>
+            </div>
+            <span class="vc-chev">▾</span>
+          </div>
+          <div class="vc-body">
+            <div class="vcb-row"><div class="vcb-lbl">CC</div><div class="vcb-cc">F/U HTN + DM1 Routine · ปวดหัวเป็นบางครั้ง ไม่มีอาการอื่น</div></div>
+            <div class="vcb-row"><div class="vcb-lbl">Dx</div><div class="vcb-dx"><span class="dxb pri"><span class="dxb-c">I10</span>HTN</span><span class="dxb"><span class="dxb-c">E10.9</span>DM1</span><span class="dxb"><span class="dxb-c">E78.4</span>HLD</span></div></div>
+            <div class="vcb-row"><div class="vcb-lbl">Lab</div>
+              <div class="vcb-labs">
+                <div class="vcb-lr"><span class="vcb-ln">HbA1c</span><span class="vcb-lv a">7.9%</span><span class="vcb-lf lf-a">Caution</span></div>
+                <div class="vcb-lr"><span class="vcb-ln">BP</span><span class="vcb-lv g">132/84</span><span class="vcb-lf lf-g">Near target</span></div>
+                <div class="vcb-lr"><span class="vcb-ln">LDL</span><span class="vcb-lv r">138</span><span class="vcb-lf lf-a">HIGH</span></div>
+              </div>
+            </div>
+            <div class="vcb-row"><div class="vcb-lbl">Rx</div>
+              <div class="vcb-meds">
+                <div class="vcb-mr"><span class="vcb-mn">+</span><div class="vcb-mb"><span class="vcb-mname">AMLODIPINE 5MG</span><span class="vcb-mgn">CCB — เพิ่มใหม่</span><div class="vcb-msig">1 Tab OD · <span class="mt mt-off">Discontinued Mar 26</span></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visit 3: Mar 2025 best -->
+        <div class="vc closed" data-prob="htn dm lip">
+          <div class="vc-hdr" onclick="toggleVC(this)">
+            <div class="vc-left">
+              <div class="vc-toprow"><span class="vcb-opd">OPD</span><span class="vc-date">10 Mar 2025 — Best ✓</span></div>
+              <div class="vc-dept">Medicine Clinic · DR. AUYARIN SANSOM</div>
+              <div class="vc-flags"><span class="vcf g">HbA1c 7.2% ✓</span><span class="vcf g">BP 128/80 ✓</span></div>
+            </div>
+            <span class="vc-chev">▾</span>
+          </div>
+          <div class="vc-body">
+            <div class="vcb-row"><div class="vcb-lbl">CC</div><div class="vcb-cc">F/U Routine · ดีขึ้น ทานยาสม่ำเสมอ ไม่มีอาการ</div></div>
+            <div class="vcb-row"><div class="vcb-lbl">Dx</div><div class="vcb-dx"><span class="dxb pri"><span class="dxb-c">I10</span>HTN</span><span class="dxb"><span class="dxb-c">E10.9</span>DM1</span><span class="dxb"><span class="dxb-c">E78.4</span>HLD</span></div></div>
+            <div class="vcb-row"><div class="vcb-lbl">Lab</div>
+              <div class="vcb-labs">
+                <div class="vcb-lr"><span class="vcb-ln">HbA1c</span><span class="vcb-lv g">7.2%</span><span class="vcb-lf lf-g">Target ✓</span></div>
+                <div class="vcb-lr"><span class="vcb-ln">BP</span><span class="vcb-lv g">128/80</span><span class="vcb-lf lf-g">Target ✓</span></div>
+                <div class="vcb-lr"><span class="vcb-ln">LDL</span><span class="vcb-lv a">128</span><span class="vcb-lf lf-a">Above DM target</span></div>
+              </div>
+            </div>
+            <div class="vcb-row"><div class="vcb-lbl">Rx</div>
+              <div class="vcb-meds"><div class="vcb-mr"><span class="vcb-mn">—</span><div class="vcb-mb"><span class="vcb-mname" style="color:var(--t3);font-weight:400">Continued same regimen · No change</span></div></div></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /l-scroll -->
+    </div><!-- /lp-main -->
+  </div><!-- /lp -->
+
+  <!-- Resize divider -->
+  <div class="divider" id="divider" onmousedown="startResize(event)"></div>
+
+  <!-- ════ RIGHT: CURRENT VISIT 65% ════ -->
+  <div class="rp" id="rightPane">
+
+    <!-- Label -->
+    <div class="rp-lbl">
+      <span style="font-size:11px">✏️</span>
+      <span class="rp-lbl-t">Current Visit — ขวา · IP-26-00131 · Ward 6B · 09 Feb–06 Mar 2026</span>
+      <span class="sdot-sm" style="margin-right:3px"></span>
+      <span style="font-size:11px;color:var(--navy-m)">Saved 14:56</span>
+    </div>
+
+    <!-- Nursing bar -->
+    <div class="nurse-bar" onclick="toggleNurseDetail()">
+      <span class="nb-ico">👩‍⚕️</span>
+      <div class="nb-c">
+        <div class="nb-title">Nursing Records — วันนี้</div>
+        <div class="nb-items">
+          <span class="nb-item">📊 Vitals<span class="nt">06:00 · 10:00 · 14:00</span></span>
+          <span class="nb-item">💊 Meds given<span class="nt">08:30</span></span>
+          <span class="nb-item" style="color:#ef4444">⚠️ BP 158/96<span class="nt" style="color:#fca5a5">10:00 reported</span></span>
+        </div>
+      </div>
+      <span class="nb-expand" id="nurseExpandLbl">▾ Details</span>
+    </div>
+    <div class="nurse-detail" id="nurseDetail">
+      <div class="nd-grid">
+        <div class="nd-card">
+          <div class="nd-hdr"><span>📊</span><span class="nd-ht">Vital Signs</span><span class="nd-tm">10:00 · RN. สุมาลี</span></div>
+          <div class="nd-row"><span class="nd-k">BP</span><span class="nd-v r">158/96 mmHg ⚠️</span></div>
+          <div class="nd-row"><span class="nd-k">HR</span><span class="nd-v">78 bpm</span></div>
+          <div class="nd-row"><span class="nd-k">Pain score</span><span class="nd-v" style="color:#b45309">5/10</span></div>
+        </div>
+        <div class="nd-card">
+          <div class="nd-hdr"><span>💊</span><span class="nd-ht">Med Given</span><span class="nd-tm">08:30</span></div>
+          <div class="nd-row"><span class="nd-k">Drug</span><span class="nd-v">DUOCETZ 1 tab</span></div>
+          <div class="nd-row"><span class="nd-k">Route</span><span class="nd-v">PO</span></div>
+          <div class="nd-row"><span class="nd-k">Verified</span><span class="nd-v ok">RN. วารี ✓</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phase tabs + Layout toggle -->
+    <div class="phase-bar">
+      <!-- Layout toggle -->
+      <div style="display:flex;align-items:center;gap:6px;padding:0 10px;border-right:1px solid var(--rule);flex-shrink:0">
+        <span style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3)">Layout</span>
+        <div style="display:flex;background:var(--s2);border-radius:5px;padding:2px;gap:1px">
+          <button id="btnPhase" onclick="setLayout('phase')"
+            style="padding:3px 10px;border-radius:3px;font-family:var(--font);font-size:11.5px;font-weight:600;cursor:pointer;border:none;background:var(--navy);color:#fff;transition:all .15s">Phase</button>
+          <button id="btnCol" onclick="setLayout('col')"
+            style="padding:3px 10px;border-radius:3px;font-family:var(--font);font-size:11.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);transition:all .15s">Column</button>
+        </div>
+      </div>
+
+      <div class="ph-tab on" id="pt1" onclick="setPhase(1)">
+        <span class="ph-num" id="pn1">1</span>บันทึก
+      </div>
+      <div class="ph-tab" id="pt2" onclick="setPhase(2)">
+        <span class="ph-num" id="pn2">2</span>สั่งการรักษา
+      </div>
+      <div class="ph-tab" id="pt3" onclick="setPhase(3)">
+        <span class="ph-num" id="pn3">3</span>สิ้นสุด
+      </div>
+      <div class="ph-bar-r">
+        <button class="btn btn-ghost btn-sm">Templates</button>
+        <button class="btn btn-ghost btn-sm">🖨️ Print</button>
+        <button class="btn btn-navy btn-sm">💾 Save</button>
+      </div>
+    </div>
+
+    <!-- ════ CONTENT AREA: phases + right panel + strip ════ -->
+    <div style="flex:1;display:flex;overflow:hidden;min-height:0">
+
+    <!-- ════ PHASE 1: SINGLE PAPER DOCUMENT ════ -->
+    <div class="phase-view on" id="pv1">
+
+      <!--
+        ONE scrollable document.
+        No sub-boxes. No individual scroll areas.
+        Scroll this once = see everything.
+        Labels left | Content right.
+        Like writing on A4.
+      -->
+      <div class="paper-doc">
+
+        <!-- CC / PI -->
+        <div class="prow">
+          <div class="prow-lbl">
+            <div class="prow-lbl-th">CC / PI</div>
+            <div class="prow-lbl-en">Chief Complaint · Present Illness</div>
+          </div>
+          <div class="pta" contenteditable="true" spellcheck="false"
+            data-ph="– อาการสำคัญ / ระยะเวลา / อาการร่วม"
+          >– หกล้ม แขนขวากระแทกพื้น 2 ชม. ก่อนมา รพ.
+– ปวดแขนขวา บวม ยกแขนไม่ขึ้น ไม่มีแผลเปิด N/V intact</div>
+        </div>
+
+        <!-- PE -->
+        <div class="prow">
+          <div class="prow-lbl">
+            <div class="prow-lbl-th">PE</div>
+            <div class="prow-lbl-en">Physical Examination</div>
+            <div class="prow-lbl-note" style="margin-left:auto;font-size:9px;color:var(--t4)">Vitals อยู่ใน Banner</div>
+          </div>
+          <div class="pta" contenteditable="true" spellcheck="false"
+            data-ph="– GA · CVS · RS · Abdomen · Extremity · Local findings"
+          >– GA: Alert, mild distress (pain), not toxic
+– CVS: RR, no murmur · RS: clear bilaterally
+– Abdomen: soft, non-tender
+– Right arm: Swelling + tenderness mid-shaft humerus, NV intact distally, CRT &lt;2s
+– Left hand: erythematous scaly patch dorsum (Tinea manuum)</div>
+        </div>
+
+        <!-- Past Hx -->
+        <div class="prow">
+          <div class="prow-lbl">
+            <div class="prow-lbl-th">Past Hx</div>
+            <div class="prow-lbl-en">PMH · PSH · FH · SH · Meds · Allergy</div>
+          </div>
+          <div class="pta" contenteditable="true" spellcheck="false"
+            data-ph="– PMH · PSH · FH · SH · ยาเดิม · แพ้ยา"
+          >PMH: HTN (uncontrolled), DM Type 1, Hyperlipidaemia, Tinea manuum
+PSH: Cardiac catheterization 06 Mar 2026 · Therapeutic ultrasound 13 Feb 2026
+FH:  Father — HTN, DM · SH: ไม่สูบบุหรี่ ทำงานออฟฟิส
+Meds: Amlodipine 5mg OD (DC Mar 26) · NKDA</div>
+        </div>
+
+        <!-- Dx -->
+        <div class="prow">
+          <div class="prow-lbl">
+            <div class="prow-lbl-th">Dx</div>
+            <div class="prow-lbl-en">Diagnosis · ICD-10</div>
+          </div>
+          <div class="dx-row" style="padding:8px 18px 12px">
+              <div class="dx-chips" id="dxChips">
+                <span class="dxc pri"><span class="dc-c">S42.3</span>Humeral shaft Fx, R<span class="dc-x" onclick="rmDx(this)">×</span></span>
+                <span class="dxc"><span class="dc-c">I10</span>HTN<span class="dc-x" onclick="rmDx(this)">×</span></span>
+                <span class="dxc"><span class="dc-c">E10.9</span>DM Type 1<span class="dc-x" onclick="rmDx(this)">×</span></span>
+                <span class="dxc"><span class="dc-c">E78.4</span>Hyperlipidaemia<span class="dc-x" onclick="rmDx(this)">×</span></span>
+                <span class="dxc"><span class="dc-c">B35.2</span>Tinea manuum<span class="dc-x" onclick="rmDx(this)">×</span></span>
+              </div>
+              <div class="dx-inp-wrap">
+                <input class="dx-inp" id="dxInp"
+                  placeholder="+ ICD-10: พิมพ์ code หรือชื่อโรค…"
+                  oninput="dxSearch(this.value)"
+                  onkeydown="dxKey(event)"
+                  onblur="setTimeout(()=>document.getElementById('dxDrop').classList.remove('show'),150)">
+                <div class="dx-drop" id="dxDrop"></div>
+              </div>
+              <div class="dx-note" contenteditable="true"
+                data-ph="Assessment / DDx / Clinical reasoning…"
+              >R humeral shaft Fx (closed) — mechanism: ground-level fall. XR: mid-shaft oblique fracture, minimal displacement. NV intact. Conservative (functional bracing) preferred. Ortho consult arranged.
+Background: HTN uncontrolled (BP 148/92), DM1 HbA1c 8.4% suboptimal, no statin for HLD.</div>
+          </div>
+        </div>
+
+      </div><!-- /paper-doc -->
+
+      <div class="paper-footer">
+        <div class="pf-stamp">
+          <span>Ward 6B · DR. AUYARIN SANSOM · 06 Mar 2026 14:56</span>
+        </div>
+        <button class="btn btn-ghost btn-sm">🔒 Sign</button>
+        <button class="btn btn-navy btn-sm" onclick="setPhase(2)">สั่งการรักษา →</button>
+      </div>
+    </div><!-- /pv1 -->
+
+    <!-- ════ PHASE 2: สั่งการรักษา ════ -->
+    <div class="phase-view" id="pv2">
+
+      <!-- Single scroll — no sidebar, no sub-boxes, like the paper entry page -->
+      <div class="paper-doc" id="orderDoc">
+
+        <!-- ── GROUP: Lab ── (Inline Cumulative Viewer) -->
+        <div class="prow lab-cumu-prow">
+          <!-- Compact header bar: title + quick status chips + actions -->
+          <div class="prow-lbl lab-cumu-prow-hdr">
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <div class="prow-lbl-th" style="font-size:11px;letter-spacing:.4px">🧪 Lab</div>
+              <div class="prow-lbl-en">Cumulative Investigation Viewer</div>
+            </div>
+            <div class="lab-inline-statusbar">
+              <span class="lab-inline-chip r" onclick="labCumuSetPreview('GLUCOSE')" title="Glucose / HbA1c">
+                HbA1c <span class="lab-chip-val">8.4%</span><span class="lab-chip-flag">↑HIGH</span>
+              </span>
+              <span class="lab-inline-chip amber" onclick="labCumuSetPreview('LIPID')" title="Lipid Profile">
+                LDL <span class="lab-chip-val">148</span><span class="lab-chip-flag amber">↑HIGH</span>
+              </span>
+              <span class="lab-inline-chip g" onclick="labCumuSetPreview('KIDNEY')" title="Kidney Function">
+                eGFR <span class="lab-chip-val">78</span><span class="lab-chip-flag g">✓</span>
+              </span>
+              <span class="lab-inline-chip cbc" onclick="labCumuSetPreview('CBC')" title="CBC">
+                CBC <span class="lab-chip-val">—</span><span class="lab-chip-flag pend">Pending</span>
+              </span>
+              <div style="width:1px;height:16px;background:var(--rule);flex-shrink:0;margin:0 2px"></div>
+              <button class="btn btn-ghost btn-sm lab-hdr-btn" onclick="addLabOrder()">＋ สั่ง Lab</button>
+              <button class="btn btn-ghost btn-sm lab-hdr-btn" onclick="openLabCumu()" title="Full-screen viewer">⛶ เต็มจอ</button>
+            </div>
+          </div>
+          <!-- Inline iframe: loads Lab_Cumu1.html at full panel height -->
+          <div class="lab-cumu-inline-wrap">
+            <iframe
+              id="labCumuInlineFrame"
+              src="Lab_Cumu1.html"
+              class="lab-cumu-inline-frame"
+              title="Lab Cumulative Viewer — inline"
+              onload="labCumuInlineReady(this)"
+            ></iframe>
+          </div>
+        </div>
+
+        <!-- ── GROUP: X-Ray / Imaging ── -->
+        <div class="prow">
+          <div class="prow-lbl">
+            <div class="prow-lbl-th">X-Ray</div>
+            <div class="prow-lbl-en">Imaging</div>
+          </div>
+          <div style="padding:8px 18px 12px">
+            <div class="ord-list">
+              <div class="ord-row resulted">
+                <input type="checkbox" checked class="oi-cb" onclick="event.stopPropagation()">
+                <div class="ord-main">
+                  <div class="ord-name-row">
+                    <span class="ord-name">X-Ray Humerus AP / Lateral</span>
+                    <span class="oi-badge today">TODAY</span>
+                  </div>
+                  <div class="oi-times">
+                    <span class="oi-time">O: 06/03/26</span>
+                    <span class="oi-time collected">C: 09:15</span>
+                    <span class="oi-time reported">R: 10:30</span>
+                  </div>
+                  <div style="font-size:12px;color:var(--t2);margin-top:4px">Mid-shaft oblique fracture, minimal displacement. NV intact.</div>
+                </div>
+                <div class="ord-result">
+                  <span class="ord-flag gf">Done</span>
+                </div>
+                <span class="oi-env" title="ดูภาพ">🖼️</span>
+              </div>
+              <div class="ord-add">＋ Add X-Ray / Imaging</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── GROUP: Medicine (Rx) ── -->
+        <div class="prow">
+          <div class="prow-lbl">
+            <div class="prow-lbl-th">ยา</div>
+            <div class="prow-lbl-en">Medicine (Rx)</div>
+          </div>
+          <div style="padding:8px 18px 12px">
+            <div class="ord-list" id="rxOrderList">
+              <div class="rx-order-row">
+                <span class="rx-order-num">1</span>
+                <div class="rx-order-body">
+                  <div class="rx-order-name">Motilium (10 mg) tablet <span class="rx-order-gn">Domperidone</span></div>
+                  <div class="rx-order-sig"><strong>1 Tablet</strong> Take 3 Times Daily Before Breakfast Lunch and Dinner</div>
+                  <div class="rx-order-meta"><span class="rx-qty">#3 tab</span><span class="rx-status rxs-ok">Active</span><span style="font-family:var(--mono);font-size:9.5px;color:var(--t3)">นพ.อุยริน · 06 Mar</span></div>
+                </div>
+              </div>
+              <div class="rx-order-row">
+                <span class="rx-order-num">2</span>
+                <div class="rx-order-body">
+                  <div class="rx-order-name">DROP Tylenol (100 mg/ml) (15ml) <span class="rx-order-gn">Paracetamol</span></div>
+                  <div class="rx-order-sig"><strong>1 Millilitre</strong> Take Every 4 Hours For Fever ≥37.5</div>
+                  <div class="rx-order-meta"><span class="rx-qty">#60 ml</span><span class="rx-status rxs-ok">Active</span></div>
+                </div>
+              </div>
+              <div class="rx-order-row">
+                <span class="rx-order-num">3</span>
+                <div class="rx-order-body">
+                  <div class="rx-order-name">DUOCETZ TAB <span class="rx-order-gn">Paracetamol 325mg / Tramadol 37.5mg</span></div>
+                  <div class="rx-order-sig"><strong>1 Tablet</strong> Take Every 6 Hours As Needed For Pain</div>
+                  <div class="rx-order-meta"><span class="rx-qty">#400 tab</span><span class="rx-status rxs-ok">Active</span><span class="rx-status rxs-ha">⚠ Controlled</span><span style="font-family:var(--mono);font-size:9.5px;color:var(--t3)">end 14 Jun 26</span></div>
+                </div>
+              </div>
+              <div class="rx-order-row">
+                <span class="rx-order-num">4</span>
+                <div class="rx-order-body">
+                  <div class="rx-order-name">AMOXICILLIN + CLAVULANATE 625 <span class="rx-order-gn">Ranclav</span></div>
+                  <div class="rx-order-sig"><strong>1 Tablet</strong> Take 3 Times Daily After Meals</div>
+                  <div class="rx-order-meta"><span class="rx-qty">#21 tab</span><span class="rx-status rxs-ok">Active</span><span style="font-family:var(--mono);font-size:9.5px;color:var(--t3)">7d · end 13 Mar</span></div>
+                </div>
+              </div>
+              <div class="rx-order-row">
+                <span class="rx-order-num">5</span>
+                <div class="rx-order-body">
+                  <div class="rx-order-name">CLOTRIMAZOLE CREAM 1% <span class="rx-order-gn">Topical antifungal</span></div>
+                  <div class="rx-order-sig"><strong>Apply Thin Layer</strong> Twice Daily × 4 Weeks</div>
+                  <div class="rx-order-meta"><span class="rx-qty">#1 tube</span><span class="rx-status rxs-ok">Active</span></div>
+                </div>
+              </div>
+              <div class="rx-order-row" style="background:var(--ab)">
+                <span class="rx-order-num" style="color:var(--a)">!</span>
+                <div class="rx-order-body">
+                  <div class="rx-order-name" style="color:var(--a)">Antihypertensive — Pending Review</div>
+                  <div class="rx-order-sig" style="color:#b45309">BP 148/92 ยังไม่ถึง target · พิจารณา Losartan 50mg OD หลัง Ortho consult</div>
+                  <div class="rx-order-meta"><span class="rx-status rxs-pnd">Pending</span></div>
+                </div>
+              </div>
+              <div class="ord-add" onclick="addRxRow()">＋ Add Medication</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── GROUP: Consults / Others ── -->
+        <div class="prow">
+          <div class="prow-lbl">
+            <div class="prow-lbl-th">Consults</div>
+            <div class="prow-lbl-en">Others</div>
+          </div>
+          <div style="padding:8px 18px 12px">
+            <div class="ord-list">
+              <div class="ord-row pending">
+                <input type="checkbox" class="oi-cb" onclick="event.stopPropagation()">
+                <div class="ord-main">
+                  <div class="ord-name-row"><span class="ord-name">Orthopedic Consult</span></div>
+                  <div style="font-size:12px;color:var(--t2);margin-top:3px">R humeral shaft Fx — surgical vs conservative assessment</div>
+                  <div class="oi-times"><span class="oi-time">O: 06/03/26</span></div>
+                </div>
+                <div class="ord-result"><span class="ord-flag af">⏳ Pending</span></div>
+                <span class="oi-env" style="color:var(--t4)">📩</span>
+              </div>
+              <div class="ord-row pending">
+                <input type="checkbox" class="oi-cb" onclick="event.stopPropagation()">
+                <div class="ord-main">
+                  <div class="ord-name-row"><span class="ord-name">Endocrine Consult</span></div>
+                  <div style="font-size:12px;color:var(--t2);margin-top:3px">DM Type 1 — HbA1c 8.4% ↑ trend, insulin optimization</div>
+                  <div class="oi-times"><span class="oi-time">O: 06/03/26</span></div>
+                </div>
+                <div class="ord-result"><span class="ord-flag af">⏳ Pending</span></div>
+                <span class="oi-env" style="color:var(--t4)">📩</span>
+              </div>
+              <div class="ord-add">＋ Add Consult / Procedure</div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /paper-doc (orderDoc) -->
+
+      <div class="paper-footer">
+        <div class="pf-stamp">
+          สั่งการรักษา · Ward 6B · 06 Mar 2026
+          <button class="btn btn-ghost btn-sm" onclick="openLabCumu()" style="margin-left:8px">⛶ Lab เต็มจอ</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="setPhase(1)">← บันทึก</button>
+        <button class="btn btn-navy btn-sm" onclick="setPhase(3)">สิ้นสุด →</button>
+      </div>
+    </div><!-- /pv2 -->
+
+    <!-- ════ PHASE 3 ════ -->
+    <div class="phase-view" id="pv3">
+      <div class="end-3">
+        <div class="end-col a">
+          <div class="oc-hdr"><span class="oc-t">📋 Discharge Summary</span></div>
+          <div class="ec-scroll">
+            <div class="sum-kpi">
+              <div class="kpi r"><div class="kpi-l">HbA1c</div><div class="kpi-v r">8.4%</div><div class="kpi-t">&lt;7%</div></div>
+              <div class="kpi r"><div class="kpi-l">BP</div><div class="kpi-v r">148/92</div><div class="kpi-t">&lt;130/80</div></div>
+              <div class="kpi a"><div class="kpi-l">LDL</div><div class="kpi-v a">148</div><div class="kpi-t">&lt;70*</div></div>
+              <div class="kpi g"><div class="kpi-l">eGFR</div><div class="kpi-v g">78</div><div class="kpi-t">Normal ✓</div></div>
+            </div>
+            <div class="e-block">
+              <div class="e-lbl">Clinical Opinion</div>
+              <div class="e-body">"<em>R humeral shaft Fx</em> — conservative (functional bracing). <em>Metabolic triple risk</em>: HTN uncontrolled, DM1 HbA1c↑, no Statin for HLD. ต้องเริ่ม Statin และปรับ antihypertensive ใน F/U."</div>
+            </div>
+            <div class="e-block">
+              <div class="e-lbl">Discharge Condition</div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="radio" name="dc" checked> ดีขึ้น</label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="radio" name="dc"> คงที่</label>
+                <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px"><input type="radio" name="dc"> Refer</label>
+              </div>
+            </div>
+            <div class="e-block">
+              <div class="e-lbl">Discharge Instructions</div>
+              <textarea style="width:100%;background:var(--s1);border:1px solid var(--rule);border-radius:4px;padding:8px;font-family:var(--font);font-size:12.5px;color:var(--t1);resize:none;outline:none;height:80px;line-height:1.65">– ใส่ Functional brace แขนขวา ยกเว้นอาบน้ำ
+– วัดความดันที่บ้านทุกวัน บันทึกผล
+– ทาครีม Clotrimazole ทุกเช้า-เย็น</textarea>
+            </div>
+          </div>
+        </div>
+        <div class="end-col b">
+          <div class="oc-hdr"><span class="oc-t">📅 Follow-up</span><button class="btn-tx">+ Add</button></div>
+          <div class="ec-scroll">
+            <div class="fu-row"><span class="fu-ico">🏥</span><div class="fu-info"><div class="fu-t">Medicine Clinic OPD</div><div class="fu-s">HTN · DM1 · Lipid · Statin</div></div><input class="fu-inp" type="date" value="2026-06-14"></div>
+            <div class="fu-row"><span class="fu-ico">🦴</span><div class="fu-info"><div class="fu-t">Orthopedic Clinic</div><div class="fu-s">Fx check · Brace eval</div></div><input class="fu-inp" type="date" value="2026-04-06"></div>
+            <div class="fu-row"><span class="fu-ico">🧪</span><div class="fu-info"><div class="fu-t">Pre-visit Labs</div><div class="fu-s">HbA1c + Lipid + Cr</div></div><input class="fu-inp" type="date" value="2026-06-07"></div>
+            <div class="fu-row" style="background:var(--ab)"><span class="fu-ico">❤️</span><div class="fu-info"><div class="fu-t" style="color:var(--a)">Antihypertensive Review</div><div class="fu-s" style="color:var(--a)">Losartan 50mg?</div></div><button class="btn btn-ghost btn-sm">Order</button></div>
+          </div>
+        </div>
+        <div class="end-col c">
+          <div class="oc-hdr"><span class="oc-t">📄 Documents</span></div>
+          <div class="ec-scroll">
+            <div class="doc-list">
+              <div class="dc done" onclick="toggleDoc(this)"><div class="dc-cb">✓</div><div class="dc-n">Discharge Summary</div><span class="dc-btn">Preview</span></div>
+              <div class="dc done" onclick="toggleDoc(this)"><div class="dc-cb">✓</div><div class="dc-n">Medication List</div><span class="dc-btn">Print</span></div>
+              <div class="dc" onclick="toggleDoc(this)"><div class="dc-cb"></div><div class="dc-n">ใบรับรองแพทย์</div><span class="dc-btn">Create</span></div>
+              <div class="dc" onclick="toggleDoc(this)"><div class="dc-cb"></div><div class="dc-n">ใบรับรองแพทย์ประกันชีวิต</div><span class="dc-btn">Create</span></div>
+              <div class="dc" onclick="toggleDoc(this)"><div class="dc-cb"></div><div class="dc-n">ใบส่งตัว / Referral</div><span class="dc-btn">Create</span></div>
+              <div class="dc" onclick="toggleDoc(this)"><div class="dc-cb"></div><div class="dc-n">Sick Leave / ใบลาป่วย</div><span class="dc-btn">Create</span></div>
+            </div>
+          </div>
+          <div style="padding:10px 14px;display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--rule)">
+            <button class="btn-lock" onclick="alert('Encounter signed and locked.')">🔒 Sign &amp; Lock Encounter</button>
+            <div style="display:flex;gap:5px">
+              <button class="btn btn-ghost btn-sm" style="flex:1" onclick="setPhase(2)">← กลับ</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1">🖨️ Print All</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /pv3 -->
+
+    <!-- ════ COLUMN MODE — 3 zones always visible ════
+         History (left panel) + Notes (col 1) + Orders (col 2)
+         Doctor sees everything without switching.
+         Orders at bottom of right half to match requirement 4.
+    ════ -->
+    <div class="col-mode" id="colMode">
+
+      <!-- Col 1: บันทึก (notes only — CC/PI, PE, Past Hx, Dx) -->
+      <div class="col-section">
+        <div class="col-hdr">
+          <span class="col-hdr-t">1 · บันทึก</span>
+          <span style="font-size:9.5px;color:var(--navy);font-family:var(--mono)">IP-26-00131</span>
+        </div>
+        <div style="flex:1;overflow-y:auto;min-height:0">
+
+          <!-- CC/PI -->
+          <div class="prow">
+            <div class="prow-lbl" style="width:76px;padding:10px 6px 10px 12px">
+              <div class="prow-lbl-th" style="font-size:11px">CC / PI</div>
+              <div class="prow-lbl-en">Hx</div>
+            </div>
+            <div class="prow-content">
+              <div class="pta" contenteditable="true" spellcheck="false" style="padding:10px 14px;font-size:13px;min-height:44px"
+                data-ph="– อาการสำคัญ / ระยะเวลา / อาการร่วม">– หกล้ม แขนขวากระแทกพื้น 2 ชม. ก่อนมา รพ.
+– ปวดแขนขวา บวม ยกแขนไม่ขึ้น ไม่มีแผลเปิด N/V intact</div>
+            </div>
+          </div>
+
+          <!-- PE -->
+          <div class="prow">
+            <div class="prow-lbl" style="width:76px;padding:10px 6px 10px 12px">
+              <div class="prow-lbl-th" style="font-size:11px">PE</div>
+              <div class="prow-lbl-en">Exam</div>
+            </div>
+            <div class="prow-content">
+              <div class="pta" contenteditable="true" spellcheck="false" style="padding:10px 14px;font-size:13px;min-height:44px"
+                data-ph="– GA · CVS · RS · Local findings">– Swelling + tenderness R mid-shaft humerus
+– NV intact distally · No open wound</div>
+            </div>
+          </div>
+
+          <!-- Past Hx -->
+          <div class="prow">
+            <div class="prow-lbl" style="width:76px;padding:10px 6px 10px 12px">
+              <div class="prow-lbl-th" style="font-size:11px">Past Hx</div>
+              <div class="prow-lbl-en">PMH/PSH</div>
+            </div>
+            <div class="prow-content">
+              <div class="pta" contenteditable="true" spellcheck="false" style="padding:10px 14px;font-size:13px;min-height:44px"
+                data-ph="– PMH · PSH · FH · SH · Meds · Allergy">PMH: HTN · DM1 · HLD · Tinea manuum
+Meds: Amlodipine 5mg (DC Mar 26) · NKDA</div>
+            </div>
+          </div>
+
+          <!-- Dx -->
+          <div class="prow" style="flex-shrink:0">
+            <div class="prow-lbl" style="width:76px;padding:10px 6px 10px 12px">
+              <div class="prow-lbl-th" style="font-size:11px">Dx</div>
+              <div class="prow-lbl-en">ICD-10</div>
+            </div>
+            <div class="prow-content">
+              <div style="padding:10px 14px">
+                <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">
+                  <span class="dxc pri"><span class="dc-c">S42.3</span>Humeral Fx, R</span>
+                  <span class="dxc"><span class="dc-c">I10</span>HTN</span>
+                  <span class="dxc"><span class="dc-c">E10.9</span>DM1</span>
+                  <span class="dxc"><span class="dc-c">E78.4</span>HLD</span>
+                  <span class="dxc"><span class="dc-c">B35.2</span>Tinea</span>
+                </div>
+                <div class="pta" contenteditable="true" spellcheck="false" style="padding:0;font-size:12.5px;min-height:32px;color:var(--t2)"
+                  data-ph="Assessment / reasoning…">R humeral shaft Fx — Conservative (functional bracing). HTN uncontrolled, DM1 HbA1c 8.4%, no statin.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Col 2: สั่งการรักษา — mirrors the same orderDoc from phase 2 -->
+      <div class="col-section">
+        <div class="col-hdr">
+          <span class="col-hdr-t">2 · สั่งการรักษา</span>
+          <button class="btn btn-ghost btn-sm" onclick="openLabCumu()" style="font-size:10.5px">⛶ Lab เต็มจอ</button>
+        </div>
+        <!-- JS will clone #orderDoc content here when column mode activates -->
+        <div style="flex:1;overflow-y:auto;min-height:0;padding:0 8px" id="colOrderMirror"></div>
+      </div>
+
+    </div><!-- /col-mode -->
+
+    </div><!-- /content-area -->
+
+    <!-- ── RIGHT QUICK PANEL: vertical icon strip + expandable panel ── -->
+    <div class="right-panel" id="rightPanel">
+      <div class="rp-inner">
+        <div class="rp-inner-hdr">
+          <span class="rp-inner-title" id="rpTitle">Quick Tools</span>
+          <span class="rp-inner-close" onclick="closeRightPanel()">✕</span>
+        </div>
+        <div class="rp-inner-body" id="rpBody"><!-- content injected by JS --></div>
+      </div>
+    </div>
+
+    <!-- Always-visible icon strip (36px) -->
+    <div class="rp-strip">
+      <button class="rp-strip-btn" id="rpBtn0" onclick="openRightPanel(0)" title="">
+        📊<span class="rp-tooltip">Lab เปรียบเทียบ</span>
+      </button>
+      <button class="rp-strip-btn" id="rpBtn1" onclick="openRightPanel(1)" title="">
+        💊<span class="rp-tooltip">Drug Reference</span>
+      </button>
+      <button class="rp-strip-btn" id="rpBtn2" onclick="openRightPanel(2)" title="">
+        🧮<span class="rp-tooltip">Medical Calculator</span>
+      </button>
+      <button class="rp-strip-btn" id="rpBtn3" onclick="openRightPanel(3)" title="">
+        📋<span class="rp-tooltip">ICD-10 Search</span>
+      </button>
+      <button class="rp-strip-btn" id="rpBtn4" onclick="openRightPanel(4)" title="">
+        📅<span class="rp-tooltip">Follow-up Planner</span>
+      </button>
+      <button class="rp-strip-btn" id="rpBtn5" onclick="openRightPanel(5)" title="">
+        📝<span class="rp-tooltip">Clinical Note Template</span>
+      </button>
+    </div>
+
+  </div><!-- /rp -->
+</div><!-- /shell -->
+
+<script>
+/* ════ History state ════ */
+let histState = 'normal';
+function cycleHist() {
+  const p = document.getElementById('histPane'), btn = document.getElementById('histToggle');
+  if (histState === 'normal') {
+    histState = 'collapsed';
+    p.classList.add('collapsed'); p.classList.remove('expanded');
+    btn.textContent = '▶';
+  } else {
+    histState = 'normal';
+    p.classList.remove('collapsed', 'expanded');
+    btn.textContent = '◀';
+    document.getElementById('expandBtn').textContent = 'Expand';
+  }
+}
+function expandHist() {
+  const p = document.getElementById('histPane'), eb = document.getElementById('expandBtn');
+  if (histState !== 'expanded') {
+    histState = 'expanded';
+    p.classList.add('expanded'); p.classList.remove('collapsed');
+    document.getElementById('histToggle').textContent = '▶';
+    eb.textContent = 'Restore';
+  } else {
+    histState = 'normal';
+    p.classList.remove('expanded', 'collapsed');
+    document.getElementById('histToggle').textContent = '◀';
+    eb.textContent = 'Expand';
+  }
+}
+
+/* Pop-out for dual monitor */
+function popoutHistory() {
+  const w = window.open('', 'history', 'width=600,height=800,menubar=no,toolbar=no');
+  w.document.write(`<!DOCTYPE html><html><head>
+    <title>EMR History — TEST02 TEST02</title>
+    <style>body{font-family:'Noto Sans Thai',sans-serif;font-size:13px;background:#fff;padding:16px;color:#171410}
+    h2{font-size:14px;color:#1b3a6b;margin-bottom:8px}
+    .note{font-size:11px;color:#8a837a;margin-bottom:16px}
+    .sep{border:none;border-top:1px solid #e0dbd2;margin:12px 0}
+    .vitem{margin-bottom:12px}
+    .vhead{font-weight:700;font-size:13px}
+    .vsub{font-size:11px;color:#4a453f;margin-top:3px}
+    .tag{display:inline-block;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:3px;margin:2px}
+    .r{background:#fef2f1;color:#c0392b}.g{background:#f1fbf4;color:#1a6634}.a{background:#fefaed;color:#7c4a00}
+    </style></head><body>
+    <h2>📖 History — TEST02 TEST02 (H26-001066)</h2>
+    <p class="note">29Y ♂ · B+ · Pop-out to second monitor</p>
+    <div class="vitem"><div class="vhead">IPD Ward 6B · 09 Feb–06 Mar 2026 (Current)</div>
+    <div class="vsub">CC: หกล้ม แขนขวากระแทกพื้น 2 ชม.<br>Dx: S42.3 Humeral Fx · I10 HTN · E10.9 DM1 · E78.4 HLD<br>Lab: <span class="tag r">HbA1c 8.4%</span><span class="tag r">LDL 148</span><span class="tag r">BP↑</span><span class="tag g">eGFR 78</span></div></div>
+    <hr class="sep">
+    <div class="vitem"><div class="vhead">OPD Medicine Clinic · 14 Nov 2025</div>
+    <div class="vsub">CC: F/U HTN + DM1 Routine<br>Lab: <span class="tag a">HbA1c 7.9%</span><span class="tag g">BP 132/84 ✓</span><span class="tag a">LDL 138</span><br>Rx change: Add Amlodipine 5mg OD (Discontinued Mar 26)</div></div>
+    <hr class="sep">
+    <div class="vitem"><div class="vhead">OPD Medicine Clinic · 10 Mar 2025 — Best</div>
+    <div class="vsub">CC: F/U Routine · ดีขึ้น<br>Lab: <span class="tag g">HbA1c 7.2% ✓</span><span class="tag g">BP 128/80 ✓</span><span class="tag a">LDL 128</span></div></div>
+  </body></html>`);
+  w.document.close();
+}
+
+/* ════ Layout toggle: Phase / Column ════ */
+let layoutMode = 'phase';
+function setLayout(m) {
+  layoutMode = m;
+  // Button styles
+  document.getElementById('btnPhase').style.cssText =
+    m === 'phase'
+      ? 'padding:3px 10px;border-radius:3px;font-family:var(--font);font-size:11.5px;font-weight:600;cursor:pointer;border:none;background:var(--navy);color:#fff;transition:all .15s'
+      : 'padding:3px 10px;border-radius:3px;font-family:var(--font);font-size:11.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);transition:all .15s';
+  document.getElementById('btnCol').style.cssText =
+    m === 'col'
+      ? 'padding:3px 10px;border-radius:3px;font-family:var(--font);font-size:11.5px;font-weight:600;cursor:pointer;border:none;background:var(--navy);color:#fff;transition:all .15s'
+      : 'padding:3px 10px;border-radius:3px;font-family:var(--font);font-size:11.5px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--t3);transition:all .15s';
+  const colMode = document.getElementById('colMode');
+  colMode.classList.toggle('on', m === 'col');
+  if (m === 'col') {
+    ['pv1','pv2','pv3'].forEach(id => document.getElementById(id).classList.remove('on'));
+    // Mirror orderDoc into column 2 (deep clone = same content, interactive)
+    const src  = document.getElementById('orderDoc');
+    const dest = document.getElementById('colOrderMirror');
+    if (src && dest) {
+      dest.innerHTML = '';
+      // Clone each prow as a compact section
+      src.querySelectorAll('.prow').forEach(prow => {
+        const clone = prow.cloneNode(true);
+        // Make prow-lbl even more compact in column view
+        const lbl = clone.querySelector('.prow-lbl');
+        if (lbl) { lbl.style.width = '70px'; lbl.style.padding = '8px 6px 8px 10px'; }
+        const content = clone.querySelector('.prow-content');
+        if (content) { content.style.padding = '8px 10px'; }
+        dest.appendChild(clone);
+      });
+    }
+  } else {
+    setPhase(curPhase);
+  }
+}
+
+/* ════ Column mode: add order from input ════ */
+let colOrderN = 4;
+function addColOrder() {
+  document.getElementById('colOrderInp').focus();
+}
+function addColOrderFromInput() {
+  const inp = document.getElementById('colOrderInp');
+  const val = inp.value.trim();
+  if (!val) return;
+  colOrderN++;
+  const list = document.getElementById('colRxList');
+  const div = document.createElement('div');
+  div.className = 'rx-item';
+  div.style.padding = '6px 0';
+  div.innerHTML = `<span class="rx-num">${colOrderN}</span>
+    <div class="rx-body">
+      <span class="rx-name" style="font-size:12.5px">${val}</span>
+      <div class="rx-meta" style="margin-top:3px">
+        <span class="rx-status rxs-ok">New</span>
+        <span onclick="this.closest('.rx-item').remove()" style="cursor:pointer;color:var(--t4);font-size:11px;margin-left:8px">✕</span>
+      </div>
+    </div>`;
+  list.appendChild(div);
+  inp.value = '';
+  div.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+/* ════ Phase navigation ════ */
+let curPhase = 1;
+function setPhase(n) {
+  curPhase = n;
+  // Only switch content in phase mode
+  if (layoutMode === 'phase') {
+    ['pv1','pv2','pv3'].forEach((id,i) => document.getElementById(id).classList.toggle('on', i+1===n));
+  }
+  [1,2,3].forEach(i => {
+    const pt = document.getElementById(`pt${i}`), pn = document.getElementById(`pn${i}`);
+    pt.classList.remove('on','done');
+    if (i===n) { pt.classList.add('on'); pn.textContent=i; }
+    else if (i<n) { pt.classList.add('done'); pn.textContent='✓'; }
+    else { pn.textContent=i; }
+  });
+}
+
+/* ════ Visit dropdown ════ */
+const visitMeta = {
+  cur: [['vt-ipd','IPD'],['vt-r','BP↑'],['vt-r','HbA1c↑8.4%'],['vt-r','LDL↑148'],['vt-a','R Fx']],
+  v1:  [['vt-opd','OPD'],['vt-r','BP↑'],['vt-a','Rx adj']],
+  v2:  [['vt-opd','OPD'],['vt-a','HbA1c 7.9%'],['vt-g','BP 132/84']],
+  v3:  [['vt-opd','OPD'],['vt-r','HbA1c 8.1%'],['vt-r','BP 140/88']],
+  v4:  [['vt-opd','OPD'],['vt-g','HbA1c 7.2% ✓'],['vt-g','BP 128/80 ✓']],
+};
+function changeVisit() {
+  const v = document.getElementById('visitDd').value;
+  document.getElementById('visitTags').innerHTML = visitMeta[v].map(([c,t]) => `<span class="vtag ${c}">${t}</span>`).join('');
+}
+
+/* ════ Focus axes ════ */
+const axisChips = {
+  prob:[{t:'All',f:'all'},{t:'❤️ HTN',f:'htn',c:'r'},{t:'🩸 DM1',f:'dm',c:'a'},{t:'🫀 Lipid',f:'lip',c:'a'},{t:'🦴 Fx',f:'fx'},{t:'🦠 Tinea',f:'tin'}],
+  cc:  [{t:'All',f:'all'},{t:'ปวด',f:'pain'},{t:'บวม',f:'swelling'},{t:'ไข้',f:'fever'},{t:'F/U',f:'fu'}],
+  dr:  [{t:'All',f:'all'},{t:'DR. AUYARIN',f:'auyarin'},{t:'ADMIN',f:'admin'},{t:'DR. MKT',f:'mkt'}],
+  loc: [{t:'All',f:'all'},{t:'Ward 6B',f:'ward6b'},{t:'Med OPD',f:'medopd'},{t:'Ortho OPD',f:'ortho'}],
+};
+function setAxis(btn, axis) {
+  document.querySelectorAll('.fa-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const strip = document.getElementById('focusChips');
+  strip.innerHTML = axisChips[axis].map(c =>
+    `<span class="fchip${c.c?' '+c.c:''}" onclick="setFocus(this,'${c.f}')">${c.t}</span>`
+  ).join('');
+  strip.children[0].classList.add('on');
+  document.querySelectorAll('.vc').forEach(c=>c.classList.remove('highlighted','dimmed'));
+}
+function setFocus(chip, prob) {
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on'));
+  chip.classList.add('on');
+  document.querySelectorAll('.vc').forEach(card => {
+    const p = card.dataset.prob || 'all';
+    const match = prob==='all' || p.includes(prob);
+    card.classList.toggle('highlighted', match && prob!=='all');
+    card.classList.toggle('dimmed', !match);
+  });
+}
+
+/* ════ Visit card toggle ════ */
+function toggleVC(hdr) { hdr.closest('.vc').classList.toggle('closed'); }
+
+/* ════ Nursing ════ */
+let nurseOpen = false;
+function toggleNurse() { toggleNurseDetail(); }
+function toggleNurseDetail() {
+  nurseOpen = !nurseOpen;
+  document.getElementById('nurseDetail').classList.toggle('show', nurseOpen);
+  document.getElementById('nurseExpandLbl').textContent = nurseOpen ? '▴ Close' : '▾ Details';
+}
+
+/* ════ ICD-10 search ════ */
+const ICD = [
+  {c:'W01.0',n:'Fall on same level — slipping'},
+  {c:'U07.1',n:'COVID-19, virus identified'},
+  {c:'Z96.6',n:'Presence of orthopaedic implants'},
+  {c:'I11.9',n:'Hypertensive heart disease without HF'},
+  {c:'N18.3',n:'Chronic kidney disease, stage 3'},
+  {c:'J06.9',n:'Acute upper respiratory infection'},
+];
+function dxSearch(q) {
+  const drop = document.getElementById('dxDrop');
+  if (!q) { drop.classList.remove('show'); return; }
+  const res = ICD.filter(r => r.c.toLowerCase().includes(q.toLowerCase())||r.n.toLowerCase().includes(q.toLowerCase())).slice(0,5);
+  drop.innerHTML = res.length
+    ? res.map(r=>`<div class="dx-opt" onmousedown="addDx('${r.c}','${r.n.replace(/'/g,"\\'")}')"><span class="dx-oc">${r.c}</span><span>${r.n}</span></div>`).join('')
+    : '<div style="padding:7px 12px;font-size:12px;color:var(--t3)">ไม่พบ — Enter เพื่อเพิ่ม</div>';
+  drop.classList.add('show');
+}
+function addDx(code,name) {
+  const chips = document.getElementById('dxChips');
+  const c = document.createElement('span');
+  c.className='dxc';
+  c.innerHTML=`<span class="dc-c">${code}</span>${name}<span class="dc-x" onclick="rmDx(this)">×</span>`;
+  chips.appendChild(c);
+  const inp=document.getElementById('dxInp'); inp.value='';
+  document.getElementById('dxDrop').classList.remove('show');
+}
+function dxKey(e) { if(e.key==='Enter'){const v=e.target.value.trim();if(v){addDx(v,'');e.target.value='';}e.preventDefault();} }
+function rmDx(x){x.closest('.dxc').remove()}
+
+/* ════ Add Rx item to paper doc ════ */
+let rxN = 5;
+function addRxItem() {
+  rxN++;
+  const div = document.createElement('div');
+  div.className = 'rx-item';
+  div.innerHTML = `
+    <span class="rx-num">${rxN}</span>
+    <div class="rx-body" style="flex:1">
+      <input style="background:transparent;border:none;border-bottom:1px solid var(--rule);outline:none;font-family:var(--font);font-size:13.5px;font-weight:700;color:var(--t1);width:100%;padding:1px 0" placeholder="Drug name (generic)…">
+      <input style="background:transparent;border:none;border-bottom:1px dashed var(--rule);outline:none;font-family:var(--font);font-size:12.5px;color:var(--t2);width:100%;padding:1px 0;margin-top:3px;display:block" placeholder="Dose · Route · Frequency — e.g. 1 Tablet Take 3 Times Daily…">
+      <div style="margin-top:4px"><input style="background:transparent;border:none;outline:none;font-family:var(--mono);font-size:11px;color:var(--navy-m);font-style:italic;width:80px" placeholder="#qty"> <button onclick="this.closest('.rx-item').remove()" style="font-size:10px;color:var(--r);background:none;border:none;cursor:pointer">✕</button></div>
+    </div>`;
+  const rxDoc = document.getElementById('rxDoc');
+  rxDoc.insertBefore(div, rxDoc.querySelector('.rx-add'));
+  div.querySelector('input').focus();
+}
+
+/* Rx table add row */
+let rxTabN = 5;
+function addRxRow() {
+  setPhase(2);
+  setOtab(document.querySelector('.otab'), 'rx-p');
+  setTimeout(()=>{
+    rxTabN++;
+    const tbody=document.getElementById('rxTbody');
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="color:var(--t4);font-family:var(--mono);font-size:11px">${rxTabN}</td>
+      <td><input style="background:transparent;border:none;border-bottom:1px solid var(--rule);outline:none;font-family:var(--font);font-size:12.5px;font-weight:700;color:var(--t1);width:100%;padding:1px" placeholder="Drug name…"></td>
+      <td><input style="background:transparent;border:none;border-bottom:1px solid var(--rule);outline:none;font-family:var(--mono);font-size:12px;color:var(--t1);width:100%;padding:1px" placeholder="dose · route"></td>
+      <td><input style="background:transparent;border:none;border-bottom:1px solid var(--rule);outline:none;font-family:var(--mono);font-size:12px;color:var(--t1);width:100%;padding:1px" placeholder="freq"></td>
+      <td><input style="background:transparent;border:none;border-bottom:1px solid var(--rule);outline:none;font-family:var(--mono);font-size:12px;color:var(--t1);width:100%;padding:1px" placeholder="days / qty"></td>
+      <td><input style="background:transparent;border:none;border-bottom:1px solid var(--rule);outline:none;font-size:12px;color:var(--t1);width:100%;padding:1px" placeholder="indication (ICD)"></td>
+      <td><span class="rx-sts rxs-act">Active</span></td>
+      <td class="rx-pc">DR. AUYARIN<button onclick="this.closest('tr').remove()" style="display:block;font-size:10px;color:var(--r);background:none;border:none;cursor:pointer;margin-top:3px">✕ Remove</button></td>`;
+    tbody.appendChild(tr);
+    tr.querySelector('input').focus();
+  },150);
+}
+
+/* ════ Order tabs ════ */
+function setOtab(tab,panelId) {
+  document.querySelectorAll('.otab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.otab-panel').forEach(p=>p.classList.remove('on'));
+  tab.classList.add('on');
+  document.getElementById(panelId).classList.add('on');
+}
+
+/* ════ Doc toggle ════ */
+function toggleDoc(el) {
+  el.classList.toggle('done');
+  el.querySelector('.dc-cb').textContent = el.classList.contains('done') ? '✓' : '';
+}
+
+/* ════ Drag-to-resize divider ════ */
+let isResizing=false, startX=0, startW=0;
+function startResize(e) {
+  isResizing=true; startX=e.clientX;
+  startW=document.getElementById('histPane').offsetWidth;
+  document.getElementById('divider').classList.add('dragging');
+  e.preventDefault();
+}
+document.addEventListener('mousemove', e=>{
+  if(!isResizing) return;
+  const newW=Math.max(200, Math.min(window.innerWidth*0.7, startW+(e.clientX-startX)));
+  document.getElementById('histPane').style.width=newW+'px';
+});
+document.addEventListener('mouseup', ()=>{
+  isResizing=false;
+  document.getElementById('divider').classList.remove('dragging');
+});
+
+/* ════ Keyboard shortcuts ════ */
+document.addEventListener('keydown', e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
+  if(e.target.contentEditable==='true') return;
+  if(e.key==='1') setPhase(1);
+  if(e.key==='2') setPhase(2);
+  if(e.key==='3') setPhase(3);
+  if(e.key==='h') cycleHist();
+  if(e.key==='H') expandHist();
+  if(e.key==='n') toggleNurseDetail();
+});
+</script>
+<!-- ════ LAB CUMU MODAL ════ -->
+<div class="lab-cumu-modal" id="labCumuModal">
+  <div class="lab-cumu-inner">
+    <div class="lab-cumu-hdr">
+      <div>
+        <div class="lab-cumu-hdr-t">📊 Lab Cumulative — TEST02 TEST02</div>
+        <div class="lab-cumu-hdr-sub">H26-001066 · เปรียบเทียบผล Lab ย้อนหลัง</div>
+      </div>
+      <button class="lab-cumu-close" onclick="closeLabCumu()">✕ ปิด</button>
+    </div>
+    <!-- iframe loads Lab_Cumu1.html — same directory -->
+    <iframe class="lab-cumu-frame" id="labCumuFrame" src="" title="Lab Cumulative Viewer (Full Screen)"></iframe>
+  </div>
+</div>
+
+<script>
+/* ════ Lab Cumu — Inline Frame ════ */
+
+// Called when inline iframe finishes loading
+function labCumuInlineReady(iframe) {
+  const wrap = iframe.closest('.lab-cumu-inline-wrap');
+  if (wrap) wrap.classList.add('loaded');
+  // Default: show CBC (today's first pending)
+  labCumuSetPreview('CBC');
+}
+
+// Tell the inline iframe to highlight a specific lab group
+function labCumuSetPreview(id) {
+  const frame = document.getElementById('labCumuInlineFrame');
+  if (!frame) return;
+  try {
+    const fn = frame.contentWindow && frame.contentWindow.setPreview;
+    if (typeof fn === 'function') { fn(id); return; }
+  } catch(e) {}
+  // Fallback: reload with hash
+  try {
+    const base = frame.src.split('#')[0];
+    frame.src = base + '#' + id;
+  } catch(e) {}
+}
+
+/* ════ Lab Cumu Modal (full-screen) ════ */
+function openLabCumu() {
+  const modal = document.getElementById('labCumuModal');
+  const frame  = document.getElementById('labCumuFrame');
+  if (!frame.src || frame.src === window.location.href) {
+    frame.src = 'Lab_Cumu1.html';
+  }
+  modal.classList.add('open');
+}
+function openLabCumuAtItem(labId) {
+  // First try to drive the inline frame
+  labCumuSetPreview(labId);
+  // Also open full-screen modal for deep inspection
+  const modal = document.getElementById('labCumuModal');
+  const frame  = document.getElementById('labCumuFrame');
+  frame.src = 'Lab_Cumu1.html' + (labId ? '#' + labId : '');
+  modal.classList.add('open');
+}
+function closeLabCumu() {
+  document.getElementById('labCumuModal').classList.remove('open');
+}
+// Close on backdrop click
+document.getElementById('labCumuModal').addEventListener('click', function(e) {
+  if (e.target === this) closeLabCumu();
+});
+
+/* ════ RIGHT QUICK PANEL ════ */
+const rpTools = [
+  {
+    title: '📊 Lab เปรียบเทียบ',
+    render: () => `
+      <p style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px">เปิด Lab Cumulative Viewer พร้อม Clinical Insights + Delta trends</p>
+      <button class="btn btn-navy btn-sm" style="width:100%" onclick="openLabCumu()">เปิด Lab Cumulative →</button>
+      <div style="margin-top:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);margin-bottom:5px">ผลล่าสุด visit นี้</div>
+      <div style="font-size:12.5px;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--rule)"><span>HbA1c</span><span style="font-weight:700;color:var(--r)">8.4% ↑</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--rule)"><span>LDL</span><span style="font-weight:700;color:var(--r)">148 mg/dL ↑</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--rule)"><span>eGFR</span><span style="font-weight:700;color:var(--g)">78 ✓</span></div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0"><span>CBC</span><span style="font-weight:600;color:var(--a)">Pending</span></div>
+      </div>`
+  },
+  {
+    title: '💊 Drug Reference',
+    render: () => `
+      <div style="margin-bottom:8px"><input class="oa-inp" placeholder="ค้นหายา…" style="width:100%" oninput="rpDrugSearch(this.value)"></div>
+      <div id="rpDrugResult" style="font-size:12px;color:var(--t2);line-height:1.7">
+        <div style="padding:6px 0;border-bottom:1px solid var(--rule)"><strong>Tramadol 37.5mg</strong><br>Max 400mg/day · ⚠ Controlled · ไตบกพร่อง: ลด dose</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--rule)"><strong>Amoxicillin+Clav</strong><br>GFR &lt;30: q24h · แพ้ Penicillin: ห้ามใช้</div>
+        <div style="padding:6px 0"><strong>Rosuvastatin</strong><br>LDL target &lt;70 ใน DM+CVD risk · ตรวจ LFT ก่อนเริ่ม</div>
+      </div>`
+  },
+  {
+    title: '🧮 Medical Calculator',
+    render: () => `
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px">
+        <div style="padding:8px;background:var(--s1);border-radius:5px;cursor:pointer" onclick="calcEGFR()">
+          <div style="font-weight:700;color:var(--navy)">eGFR (CKD-EPI)</div>
+          <div style="color:var(--t2);font-size:11px">คำนวณค่า eGFR จาก Cr · Age · Sex</div>
+        </div>
+        <div style="padding:8px;background:var(--s1);border-radius:5px;cursor:pointer">
+          <div style="font-weight:700;color:var(--navy)">BMI & BSA</div>
+          <div style="color:var(--t2);font-size:11px">Body Mass Index · Body Surface Area</div>
+        </div>
+        <div style="padding:8px;background:var(--s1);border-radius:5px;cursor:pointer">
+          <div style="font-weight:700;color:var(--navy)">HbA1c → eAG</div>
+          <div style="color:var(--t2);font-size:11px">HbA1c 8.4% → avg glucose ~194 mg/dL</div>
+        </div>
+        <div style="padding:8px;background:var(--s1);border-radius:5px;cursor:pointer">
+          <div style="font-weight:700;color:var(--navy)">CHA₂DS₂-VASc</div>
+          <div style="color:var(--t2);font-size:11px">AF stroke risk score</div>
+        </div>
+      </div>`
+  },
+  {
+    title: '📋 ICD-10 Search',
+    render: () => `
+      <div style="margin-bottom:8px"><input class="oa-inp" placeholder="ค้น ICD-10…" style="width:100%" oninput="rpIcdSearch(this.value)" id="rpIcdInp"></div>
+      <div id="rpIcdResult" style="font-size:12px;color:var(--t2);display:flex;flex-direction:column;gap:2px">
+        <div class="rp-icd-row" onclick="addDxFromPanel('S42.3','Humeral shaft Fx')"><span style="font-family:var(--mono);color:var(--navy-m);font-weight:600;min-width:44px">S42.3</span> Humeral shaft Fx</div>
+        <div class="rp-icd-row" onclick="addDxFromPanel('I10','Essential HTN')"><span style="font-family:var(--mono);color:var(--navy-m);font-weight:600;min-width:44px">I10</span> Essential Hypertension</div>
+        <div class="rp-icd-row" onclick="addDxFromPanel('E10.9','DM Type 1')"><span style="font-family:var(--mono);color:var(--navy-m);font-weight:600;min-width:44px">E10.9</span> DM Type 1 w/o complications</div>
+        <div class="rp-icd-row" onclick="addDxFromPanel('E78.4','Hyperlipidaemia')"><span style="font-family:var(--mono);color:var(--navy-m);font-weight:600;min-width:44px">E78.4</span> Hyperlipidaemia</div>
+        <div class="rp-icd-row" onclick="addDxFromPanel('B35.2','Tinea manuum')"><span style="font-family:var(--mono);color:var(--navy-m);font-weight:600;min-width:44px">B35.2</span> Tinea manuum</div>
+      </div>`
+  },
+  {
+    title: '📅 Follow-up Planner',
+    render: () => `
+      <div style="font-size:12px;display:flex;flex-direction:column;gap:6px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);margin-bottom:2px">Appointments planned</div>
+        <div style="padding:7px 10px;background:var(--navy-p);border-radius:5px">
+          <div style="font-weight:700;color:var(--navy)">🏥 Medicine Clinic OPD</div>
+          <div style="color:var(--t2);font-size:11px">HTN · DM1 · Lipid · Statin review</div>
+          <input type="date" value="2026-06-14" style="font-family:var(--mono);font-size:11px;border:1px solid var(--rule);border-radius:3px;padding:2px 6px;margin-top:4px;outline:none">
+        </div>
+        <div style="padding:7px 10px;background:var(--s1);border-radius:5px">
+          <div style="font-weight:700;color:var(--t1)">🦴 Orthopedic Clinic</div>
+          <div style="color:var(--t2);font-size:11px">Fx check · Brace evaluation</div>
+          <input type="date" value="2026-04-06" style="font-family:var(--mono);font-size:11px;border:1px solid var(--rule);border-radius:3px;padding:2px 6px;margin-top:4px;outline:none">
+        </div>
+        <div style="padding:7px 10px;background:var(--ab);border-radius:5px">
+          <div style="font-weight:700;color:var(--a)">🧪 Pre-visit Labs</div>
+          <div style="color:#b45309;font-size:11px">HbA1c + Lipid + Cr — 1 wk before OPD</div>
+          <input type="date" value="2026-06-07" style="font-family:var(--mono);font-size:11px;border:1px solid var(--rule);border-radius:3px;padding:2px 6px;margin-top:4px;outline:none">
+        </div>
+        <button class="btn btn-navy btn-sm" style="width:100%;margin-top:4px">💾 Save F/U Plan</button>
+      </div>`
+  },
+  {
+    title: '📝 Note Templates',
+    render: () => `
+      <div style="font-size:12px;display:flex;flex-direction:column;gap:5px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);margin-bottom:2px">เลือก Template แล้วกด Apply</div>
+        ${['Orthopedic Fracture','HTN Follow-up OPD','DM Annual Review','Discharge Summary IPD','Post-op Day 1','Referral Letter'].map((t,i) => 
+          `<div style="padding:7px 10px;background:var(--s1);border-radius:5px;cursor:pointer;transition:background .1s;display:flex;align-items:center;justify-content:space-between" onclick="applyTemplate('${t}')" onmouseover="this.style.background='var(--navy-p)'" onmouseout="this.style.background='var(--s1)'">
+            <span style="font-weight:600;color:var(--t1)">${t}</span>
+            <span style="font-size:10px;color:var(--navy-m);font-weight:600">Apply →</span>
+          </div>`
+        ).join('')}
+      </div>`
+  }
+];
+
+let rpOpenIdx = -1;
+function openRightPanel(idx) {
+  const panel = document.getElementById('rightPanel');
+  const body  = document.getElementById('rpBody');
+  const title = document.getElementById('rpTitle');
+  // Toggle
+  if (rpOpenIdx === idx && panel.classList.contains('open')) {
+    closeRightPanel(); return;
+  }
+  rpOpenIdx = idx;
+  document.querySelectorAll('.rp-strip-btn').forEach((b,i) => b.classList.toggle('active', i===idx));
+  title.textContent = rpTools[idx].title;
+  body.innerHTML   = rpTools[idx].render();
+  panel.classList.add('open');
+}
+function closeRightPanel() {
+  document.getElementById('rightPanel').classList.remove('open');
+  document.querySelectorAll('.rp-strip-btn').forEach(b => b.classList.remove('active'));
+  rpOpenIdx = -1;
+}
+
+// Add style for ICD rows in panel
+const rpStyle = document.createElement('style');
+rpStyle.textContent = `.rp-icd-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;cursor:pointer;border-bottom:1px solid var(--rule)}.rp-icd-row:hover{background:var(--navy-p);color:var(--navy)}`;
+document.head.appendChild(rpStyle);
+
+function addDxFromPanel(code, name) {
+  const chips = document.getElementById('dxChips');
+  if (!chips) return;
+  if ([...chips.querySelectorAll('.dc-c')].some(el => el.textContent === code)) return;
+  const c = document.createElement('span');
+  c.className = 'dxc';
+  c.innerHTML = `<span class="dc-c">${code}</span>${name}<span class="dc-x" onclick="rmDx(this)">×</span>`;
+  chips.appendChild(c);
+  showToast(`เพิ่ม Dx: ${code} ${name}`);
+}
+
+function applyTemplate(name) {
+  showToast(`Applied template: ${name}`);
+  closeRightPanel();
+  setPhase(1);
+}
+
+function rpDrugSearch(q) {} // placeholder
+function rpIcdSearch(q) {
+  const ICD_LIST = [
+    {c:'S42.3',n:'Humeral shaft Fx'},{c:'I10',n:'Essential HTN'},{c:'E10.9',n:'DM Type 1'},
+    {c:'E78.4',n:'Hyperlipidaemia'},{c:'B35.2',n:'Tinea manuum'},{c:'J06.9',n:'Acute URTI'},
+    {c:'N18.3',n:'CKD stage 3'},{c:'I25.1',n:'Atherosclerotic CAD'},
+  ];
+  const res = document.getElementById('rpIcdResult');
+  if (!res) return;
+  const filtered = q ? ICD_LIST.filter(r => r.c.toLowerCase().includes(q.toLowerCase()) || r.n.toLowerCase().includes(q.toLowerCase())) : ICD_LIST;
+  res.innerHTML = filtered.slice(0,6).map(r =>
+    `<div class="rp-icd-row" onclick="addDxFromPanel('${r.c}','${r.n}')"><span style="font-family:var(--mono);color:var(--navy-m);font-weight:600;min-width:44px">${r.c}</span> ${r.n}</div>`
+  ).join('');
+}
+
+function calcEGFR() {
+  const cr = parseFloat(prompt('Creatinine (mg/dL):', '1.0'));
+  if (!cr) return;
+  const age = parseInt(prompt('Age (years):', '29'));
+  // Simplified CKD-EPI
+  const k = 0.9, a = -0.302;
+  const ratio = cr / k;
+  const egfr = Math.round(142 * Math.pow(Math.min(ratio,1),a) * Math.pow(Math.max(ratio,1),-1.200) * Math.pow(0.9938,age));
+  showToast(`eGFR (CKD-EPI) ≈ ${egfr} mL/min/1.73m²`);
+}
+function addLabOrder() {
+  const name = prompt('Lab name:');
+  if (!name) return;
+  const body = document.getElementById('rxGroupBody') || document.querySelector('.og-body');
+  // Just show a toast — in production this would open an order form
+  showToast(`Lab ordered: ${name}`);
+}
+function addImagingOrder() { showToast('เปิดหน้าสั่ง Imaging…'); }
+function addNewOrderDialog() { showToast('เปิดหน้าสั่ง Order…'); }
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:opacity .3s';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(), 300); }, 2000);
+}
+</script>
+</body>
+</html>
